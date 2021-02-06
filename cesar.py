@@ -29,8 +29,12 @@ from Quotes import Quotes
 # -------------------------------------------------------------
 # criando o updater e dispatcher para o BOT
 # -------------------------------------------------------------
+f = open('token.txt')
+token = f.read()
+f.close()
+
 updater = Updater(
-    token="1698389604:AAFw9-MFvR_Zu6uIdJPbFdeFkjlWgxv4_J4",
+    token=token.strip(),
     use_context=True
 )
 job = updater.job_queue

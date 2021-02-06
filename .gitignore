@@ -1,5 +1,5 @@
 *.db
-api.txt
+token.txt
 *.log
 test/*
 __pycache*
