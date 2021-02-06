@@ -74,6 +74,7 @@ Digite:
 /cancelar - cancela a reserva de uma base
 /eliminar - elimina uma base da lista de guerra
 /atualizar - atualiza informações sobre determinada base
+/legendas - exibe as legendas da lista de guerra
 
 /find &lt;jogador&gt; - para encontrar o contato de um jogador
 /regras - para acessar a lista de regras da aliança
@@ -244,7 +245,7 @@ def is_admin(user):
     Checa se o usuário atual é admin
     """
     # usuários que terão permissão de acesso a comandos especiais
-    authorized = ("vivaolinux", "cellobit")
+    authorized = ("vivaolinux", "CelloBit")
 
     #  if update.message.from_user.username not in authorized:
     if user not in authorized:
@@ -577,6 +578,21 @@ def obs(update, context):
     return True
 
 
+def legendas(update, context):
+    """
+    Legendas da lista de guerra
+    """
+    falar(update, context, """
+⛩ Cidade proibida 
+🛡 Coalizões de defesa 
+😈 Torre de bazucas 
+🚫 Não atacar 
+🕐 Baixar o tempo 
+🚁 Base de helicópteros
+⭐ Estrelas conquistadas
+""")
+
+
 def modelo(update, context):
     """
     Imprime um modelo/template de guerra
@@ -664,6 +680,9 @@ dispatcher.add_handler(nick_handler)
 
 modelo_handler = CommandHandler('modelo', modelo)
 dispatcher.add_handler(modelo_handler)
+
+legendas_handler = CommandHandler('legendas', legendas)
+dispatcher.add_handler(legendas_handler)
 
 obs_handler = CommandHandler('obs', obs)
 dispatcher.add_handler(obs_handler)
