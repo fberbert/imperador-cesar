@@ -1,0 +1,7 @@
+*.db
+api.txt
+*.log
+test/*
+__pycache*
+*.swp
+venv/*

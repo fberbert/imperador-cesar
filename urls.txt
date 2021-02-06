@@ -1,0 +1,5 @@
+Telegram BOT API: https://core.telegram.org/bots/api
+Python + Phantomjs: http://selenium-python.readthedocs.io/index.html
+Python-telegram-bot Wiki: https://github.com/python-telegram-bot/python-telegram-bot/wiki
+Emoji Python Module: https://github.com/python-telegram-bot/python-telegram-bot/wiki/Emoji
+Emojis: https://www.webpagefx.com/tools/emoji-cheat-sheet/

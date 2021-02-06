@@ -1,0 +1,6 @@
+wheel
+telegram
+python-telegram-bot
+emoji
+selenium
+Pillow
