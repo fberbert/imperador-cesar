@@ -55,6 +55,15 @@ def start(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text="Olá!")
 
 
+def decommand(message):
+    """
+    Desconstrói uma linha de comando, retornando o comando e conteúdo
+    """
+    pattern = '^\/([^\s]*)[\s\n](.*)$'
+    res = re.search(pattern, message, flags=re.S)
+    return [res.group(1), res.group(2)]
+
+
 def ajuda(update, context):
     """
     Menu de ajuda
@@ -87,6 +96,10 @@ Digite:
 /novaguerra - registra uma nova guerra
 /apagaguerra - apaga a guerra atual
 /obs - atualiza observações sobre a guerra
+/up - atualiza qto de glórias a vencer
+/down - atualiza qto de glórias a perder
+/inimigo - atualiza o nome do adversário de guerra
+/adicionar - adiciona uma base à lista de guerra
 
 --
 
@@ -186,7 +199,7 @@ def find(update, context):
     """
 
     # extrair o nome de usuário da linha de comando
-    q = update.message.text[6:]
+    c, q = decommand(update.message.text)
 
     if len(q) < 3:
         falar(update, context, "Digite uma busca mais específica")
@@ -212,7 +225,7 @@ def setnick(update, context):
     Configura um nickname do jogo para o membro
     """
     username = update.message.from_user.username
-    nick = update.message.text[9:]
+    c, nick = decommand(update.message.text)
 
     if len(nick) > 0:
         # open shelve file
@@ -320,9 +333,9 @@ def repeat(update, context):
         falar(update, context, "Você não tem permissão para este recurso!")
         return False
 
-    output = update.message.text[8:]
+    c, output = decommand(update.message.text)
     context.bot.send_message(
-        chat_id=update.effective_chat.id,
+        chat_id='-1001424488840',
         parse_mode='HTML',
         text=output
     )
@@ -338,7 +351,7 @@ def novaguerra(update, context):
         return False
 
     try:
-        modelo = update.message.text[11:]
+        c, modelo = decommand(update.message.text)
     except Exception:
         return False
 
@@ -457,7 +470,8 @@ def reservar(update, context):
     """
     Reserva uma base
     """
-    base = re.sub(r'\s', '', update.message.text[9:])
+    c, b = decommand(update.message.text)
+    base = re.sub(r'\s', '', b)
     nickname = pegar_nickname(update.message.from_user.username)
 
     if len(nickname) == 0:
@@ -486,7 +500,8 @@ def cancelar(update, context):
     """
     Cancela a reserva de uma base
     """
-    base = re.sub(r'\s', '', update.message.text[9:])
+    c, b = decommand(update.message.text)
+    base = re.sub(r'\s', '', b)
     nickname = pegar_nickname(update.message.from_user.username)
 
     if len(nickname) == 0:
@@ -515,7 +530,8 @@ def eliminar(update, context):
     """
     Elimina determinada base da lista de guerra
     """
-    base = re.sub(r'\s', '', update.message.text[9:])
+    c, b = decommand(update.message.text)
+    base = re.sub(r'\s', '', b)
 
     if len(base) == 0:
         msg = "Você precisa informar uma base válida."
@@ -535,7 +551,8 @@ def atualizar(update, context):
     """
     Atualiza informações sobre determinada base
     """
-    base = re.sub(r'\s', '', update.message.text[10:])
+    c, b = decommand(update.message.text)
+    base = re.sub(r'\s', '', b)
 
     if len(base) == 0:
         msg = "Você precisa informar uma base válida."
@@ -553,7 +570,33 @@ def atualizar(update, context):
     falar(update, context, msg)
 
 
-def obs(update, context):
+def estrelas(update, context):
+    """
+    Atualiza estrelas sobre determinada base
+    """
+    pattern = '^\/([^\s]*)\s([\d]*)\s(\d*)$'
+    res = re.search(pattern, update.message.text)
+    #  comando = res.group(1)
+    base = res.group(2)
+    estrelas = res.group(3)
+
+    if len(base) == 0:
+        msg = "Você precisa informar uma base válida."
+    else:
+        db = shelve.open("guerra", writeback=True)
+        try:
+            estrelas = int(estrelas) * '⭐️'
+            base_desc = re.sub(r'\s.*$', '', db[base])
+            txt = base_desc + ' ' + estrelas
+            db[base] = txt
+            msg = 'Base {} atualizada com sucesso!'.format(base_desc)
+        except Exception:
+            msg = 'Erro ao atualizar a base!'
+        db.close()
+    falar(update, context, msg)
+
+
+def atualizar_info(update, context):
     """
     Atualiza observações da guerra
     """
@@ -562,18 +605,19 @@ def obs(update, context):
         falar(update, context, "Você não tem permissão para este recurso!")
         return False
 
-    obs = update.message.text[4:]
+    comando, conteudo = decommand(update.message.text)
 
-    if len(obs) == 0:
+    if len(conteudo) == 0:
         msg = "Você precisa informar observações válidas."
-    else:
-        db = shelve.open("guerra", writeback=True)
-        try:
-            db['obs'] = obs
-            msg = 'Observações atualizadas com sucesso!'
-        except Exception:
-            msg = 'Erro ao atualizar as observações!'
-        db.close()
+        return False
+
+    db = shelve.open("guerra", writeback=True)
+    try:
+        db[comando] = conteudo
+        msg = 'Informações atualizadas com sucesso!'
+    except Exception:
+        msg = 'Erro ao atualizar as observações!'
+    db.close()
     falar(update, context, msg)
     return True
 
@@ -583,11 +627,11 @@ def legendas(update, context):
     Legendas da lista de guerra
     """
     falar(update, context, """
-⛩ Cidade proibida 
-🛡 Coalizões de defesa 
-😈 Torre de bazucas 
-🚫 Não atacar 
-🕐 Baixar o tempo 
+⛩ Cidade proibida
+🛡 Coalizões de defesa
+😈 Torre de bazucas
+🚫 Não atacar
+🕐 Baixar o tempo
 🚁 Base de helicópteros
 ⭐ Estrelas conquistadas
 """)
@@ -684,8 +728,11 @@ dispatcher.add_handler(modelo_handler)
 legendas_handler = CommandHandler('legendas', legendas)
 dispatcher.add_handler(legendas_handler)
 
-obs_handler = CommandHandler('obs', obs)
-dispatcher.add_handler(obs_handler)
+estrelas_handler = CommandHandler('estrelas', estrelas)
+dispatcher.add_handler(estrelas_handler)
+
+atualizar_info_handler = CommandHandler(['obs', 'inimigo', 'jogadores', 'up', 'down'], atualizar_info)
+dispatcher.add_handler(atualizar_info_handler)
 
 echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
 dispatcher.add_handler(echo_handler)
