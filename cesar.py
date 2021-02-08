@@ -61,7 +61,21 @@ def decommand(message):
     """
     pattern = '^\/([^\s]*)[\s\n](.*)$'
     res = re.search(pattern, message, flags=re.S)
-    return [res.group(1), res.group(2)]
+
+    if not res:
+        pattern = '^\/([^\s]*)'
+        res = re.search(pattern, message, flags=re.S)
+
+    try:
+        comando = res.group(1)
+    except Exception:
+        comando = ''
+
+    try:
+        conteudo = res.group(2)
+    except Exception:
+        conteudo = ''
+    return [comando, conteudo]
 
 
 def ajuda(update, context):
@@ -96,6 +110,7 @@ Digite:
 /novaguerra - registra uma nova guerra
 /apagaguerra - apaga a guerra atual
 /obs - atualiza observações sobre a guerra
+/delobs - apaga observações sobre a guerra
 /up - atualiza qto de glórias a vencer
 /down - atualiza qto de glórias a perder
 /inimigo - atualiza o nome do adversário de guerra
@@ -472,6 +487,7 @@ def reservar(update, context):
     """
     c, b = decommand(update.message.text)
     base = re.sub(r'\s', '', b)
+    base = '{:02d}'.format(int(b))
     nickname = pegar_nickname(update.message.from_user.username)
 
     if len(nickname) == 0:
@@ -502,6 +518,7 @@ def cancelar(update, context):
     """
     c, b = decommand(update.message.text)
     base = re.sub(r'\s', '', b)
+    base = '{:02d}'.format(int(b))
     nickname = pegar_nickname(update.message.from_user.username)
 
     if len(nickname) == 0:
@@ -532,6 +549,7 @@ def eliminar(update, context):
     """
     c, b = decommand(update.message.text)
     base = re.sub(r'\s', '', b)
+    base = '{:02d}'.format(int(b))
 
     if len(base) == 0:
         msg = "Você precisa informar uma base válida."
@@ -553,6 +571,7 @@ def atualizar(update, context):
     """
     c, b = decommand(update.message.text)
     base = re.sub(r'\s', '', b)
+    base = '{:02d}'.format(int(b))
 
     if len(base) == 0:
         msg = "Você precisa informar uma base válida."
@@ -578,6 +597,7 @@ def estrelas(update, context):
     res = re.search(pattern, update.message.text)
     #  comando = res.group(1)
     base = res.group(2)
+    base = '{:02d}'.format(int(b))
     estrelas = res.group(3)
 
     if len(base) == 0:
@@ -607,12 +627,16 @@ def atualizar_info(update, context):
 
     comando, conteudo = decommand(update.message.text)
 
-    if len(conteudo) == 0:
+    if len(conteudo) == 0 and comando != 'delobs':
         msg = "Você precisa informar observações válidas."
+        falar(update, context, msg)
         return False
 
     db = shelve.open("guerra", writeback=True)
     try:
+        if comando == 'delobs':
+            comando = 'obs'
+            conteudo = ''
         db[comando] = conteudo
         msg = 'Informações atualizadas com sucesso!'
     except Exception:
@@ -731,7 +755,7 @@ dispatcher.add_handler(legendas_handler)
 estrelas_handler = CommandHandler('estrelas', estrelas)
 dispatcher.add_handler(estrelas_handler)
 
-atualizar_info_handler = CommandHandler(['obs', 'inimigo', 'jogadores', 'up', 'down'], atualizar_info)
+atualizar_info_handler = CommandHandler(['obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down'], atualizar_info)
 dispatcher.add_handler(atualizar_info_handler)
 
 echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
