@@ -1,0 +1,18 @@
+<b>Dicas para se abrir uma base</b>
+
+1 - Soltar chamariz ao lado da fortaleza
+
+2 - Soltar tropas espalhadas ao redor do mapa para tentar descobrir armadilhas 
+
+3 - Soltar caças em direção às seguintes construções para tentar descobrir armadilhas terra-ar (se possível sabotar baterias anti-aéreas no trajeto para dar maior longevidade ao caça)
+  a) Cidade Proibida
+  b) Fortaleza
+  c) Forte
+  d) Arsenal de foguetes
+  e) Anti-tanques dentro de bastiões
+
+IMPORTANTE: Solte um caça de cada vez. Se for abatido com o caça do radar antes de atingir a construção, lançar outro
+
+4 - Soltar chamarizes em pontos abertos suspeitos (estradas ou clareiras próximas às construções acima, ou próximas das entradas mais descobertas, ou do centro)
+
+5 - Tropas extras somente se tiver realmente sobrando, preferencialmente tropas aéreas (há muitos caças que não utilizamos) ou espiãs de nível mais baixo
