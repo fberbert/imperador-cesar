@@ -98,6 +98,7 @@ Digite:
 /eliminar - elimina uma base da lista de guerra
 /atualizar - atualiza informações sobre determinada base
 /legendas - exibe as legendas da lista de guerra
+/abrirbase - dica de como abrir uma base em guerra
 
 /find &lt;jogador&gt; - para encontrar o contato de um jogador
 /regras - para acessar a lista de regras da aliança
@@ -108,7 +109,7 @@ Digite:
 /users - lista todos os membros da aliança
 /modelo - imprime um modelo para registro de nova guerra
 /novaguerra - registra uma nova guerra
-/apagaguerra - apaga a guerra atual
+/apagarguerra - apaga a guerra atual
 /obs - atualiza observações sobre a guerra
 /delobs - apaga observações sobre a guerra
 /up - atualiza qto de glórias a vencer
@@ -294,8 +295,10 @@ def users(update, context):
         return False
 
     users = list()
-    for key in db:
-        output = db[key]['nickname'] + " | " + db[key]['name'] + " => @" + str(key)
+    for key in sorted(db):
+        nickname = db[key]['nickname'] if len(db[key]['nickname']) > 1 else 'Não configurado'
+        name = db[key]['name'] if len(db[key]['name']) > 1 else 'Sem nome'
+        output = nickname + " | " + name + " => @" + str(key)
         users.append(output)
 
     db.close()
@@ -338,6 +341,14 @@ def regras(update, context):
         f.close()
 
         falar(update, context, output)
+
+
+def abrirbase(update, context):
+    file = "./regras/abrirbase.txt"
+    f = open(file, "r")
+    output = f.read()
+    f.close()
+    falar(update, context, output)
 
 
 def repeat(update, context):
@@ -398,6 +409,8 @@ para ter acesso a um modelo/template de guerra válido.
         db['up'] = up
         db['down'] = down
         db['obs'] = obs
+        db['inicio'] = ''
+        db['fim'] = ''
 
         bases = []
         for i in range(int(jogadores)):
@@ -418,7 +431,7 @@ para ter acesso a um modelo/template de guerra válido.
     return True
 
 
-def apagaguerra(update, context):
+def apagarguerra(update, context):
     """
     Deleta informações sobre a guerra atual
     """
@@ -442,6 +455,8 @@ def guerra(update, context):
         up = db['up']
         down = db['down']
         obs = db['obs']
+        inicio = db['inicio']
+        fim = db['fim']
     except Exception:
         falar(update, context, "Nenhuma guerra encontrada! Digite:\n\n/novaguerra\n\npara registrar uma.")
         return False
@@ -453,7 +468,7 @@ def guerra(update, context):
         except Exception:
             pass
 
-    falar(update, context, "CWB-LIS 🆚 {}\n🔼 {} 🔽 {}\n{}\n\n{}".format(inimigo, up, down, obs, bases_string))
+    falar(update, context, "CWB-LIS 🆚 {}\n🔼 {} 🔽 {}\n{}\n\n{}\n\n<pre>Início: {}\nFim: {}\n<i>* horário de Brasília</i></pre>".format(inimigo, up, down, obs, bases_string, inicio, fim))
     db.close
     return True
 
@@ -571,16 +586,18 @@ def atualizar(update, context):
     """
     c, b = decommand(update.message.text)
     base = re.sub(r'\s', '', b)
-    base = '{:02d}'.format(int(b))
+    pattern = '^([0-9]*)'
+    res =  re.search(pattern, base)
+    base_num = '{:02d}'.format(int(res.group(1)))
 
-    if len(base) == 0:
+    if len(base_num) == 0:
         msg = "Você precisa informar uma base válida."
     else:
         db = shelve.open("guerra", writeback=True)
         try:
-            res = re.search(r'^([0-9]{2})(.*)$', base)
-            base_num = res.group(1)
-            base_desc = res.group(2)
+            res = re.search(r'^([0-9]*)([^\s]*)(.*)$', base)
+            #  base_num = res.group(1)
+            base_desc = re.sub(r'\.', '', res.group(2))
             db[base_num] = base_num + base_desc
             msg = 'Base {} atualizada com sucesso!'.format(base_desc)
         except Exception:
@@ -597,7 +614,7 @@ def estrelas(update, context):
     res = re.search(pattern, update.message.text)
     #  comando = res.group(1)
     base = res.group(2)
-    base = '{:02d}'.format(int(b))
+    base = '{:02d}'.format(int(base))
     estrelas = res.group(3)
 
     if len(base) == 0:
@@ -725,8 +742,8 @@ dispatcher.add_handler(novaguerra_handler)
 guerra_handler = CommandHandler('guerra', guerra)
 dispatcher.add_handler(guerra_handler)
 
-apagaguerra_handler = CommandHandler('apagaguerra', apagaguerra)
-dispatcher.add_handler(apagaguerra_handler)
+apagarguerra_handler = CommandHandler('apagarguerra', apagarguerra)
+dispatcher.add_handler(apagarguerra_handler)
 
 reservar_handler = CommandHandler('reservar', reservar)
 dispatcher.add_handler(reservar_handler)
@@ -755,7 +772,10 @@ dispatcher.add_handler(legendas_handler)
 estrelas_handler = CommandHandler('estrelas', estrelas)
 dispatcher.add_handler(estrelas_handler)
 
-atualizar_info_handler = CommandHandler(['obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down'], atualizar_info)
+abrirbase_handler = CommandHandler('abrirbase', abrirbase)
+dispatcher.add_handler(abrirbase_handler)
+
+atualizar_info_handler = CommandHandler(['obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim'], atualizar_info)
 dispatcher.add_handler(atualizar_info_handler)
 
 echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
