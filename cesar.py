@@ -488,6 +488,7 @@ def pegar_nickname(user):
 def falar(update, context, msg):
     """
     Envia msg para o chat
+    Sala de guerra: -456778807
     """
     context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -563,17 +564,20 @@ def eliminar(update, context):
     Elimina determinada base da lista de guerra
     """
     c, b = decommand(update.message.text)
-    base = re.sub(r'\s', '', b)
-    base = '{:02d}'.format(int(b))
+    base_arr = b.split()
+    #  base = re.sub(r'\s', '', b)
 
-    if len(base) == 0:
+    if len(base_arr) == 0:
         msg = "Você precisa informar uma base válida."
     else:
         db = shelve.open("guerra", writeback=True)
         try:
-            base_desc = db[base]
-            del db[base]
-            msg = 'Base {} eliminada com sucesso!'.format(base_desc)
+            msg = ''
+            for base in base_arr:
+                base = '{:02d}'.format(int(base))
+                base_desc = db[base]
+                del db[base]
+                msg += 'Base {} eliminada com sucesso!\n'.format(base_desc)
         except Exception:
             msg = 'Erro ao eliminar a base. Informe uma base válida!'
         db.close()
