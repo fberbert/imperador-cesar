@@ -327,7 +327,7 @@ def chatid(update, context):
     """
     Retorna o chat_id do canal
     """
-    falar(update, context, update.effective_chat.id)
+    falar(update, context, str(update.effective_chat.id) + '\n' + update.effective_chat.type)
 
 
 def regras(update, context):
@@ -502,8 +502,9 @@ def reservar(update, context):
     Reserva uma base
     """
     c, b = decommand(update.message.text)
-    base = re.sub(r'\s', '', b)
-    base = '{:02d}'.format(int(b))
+    base_arr = b.split()
+    #  base = re.sub(r'\s', '', b)
+    #  base = '{:02d}'.format(int(b))
     nickname = pegar_nickname(update.message.from_user.username)
 
     if len(nickname) == 0:
@@ -511,18 +512,25 @@ def reservar(update, context):
         falar(update, context, msg)
         return False
 
+    if len(base_arr) == 0:
+        msg = "Você precisa informar uma base válida."
+        falar(update, context, msg)
+        return False
+
     db = shelve.open("guerra", writeback=True)
     try:
-        base_desc = db[base]
-        db[base] = base_desc + ' - ' + nickname
+        msg = ''
+        for base in base_arr:
+            base = '{:02d}'.format(int(base))
+            base_desc = db[base]
+            db[base] = base_desc + ' - ' + nickname
+            msg += "Base {} reservada com sucesso!\n".format(base_desc)
     except Exception:
         base = ''
     db.close()
 
     if len(base) == 0:
         msg = "Você precisa informar uma base válida."
-    else:
-        msg = "Base {} reservada com sucesso!".format(base_desc)
 
     falar(update, context, msg)
     return True
@@ -533,8 +541,9 @@ def cancelar(update, context):
     Cancela a reserva de uma base
     """
     c, b = decommand(update.message.text)
-    base = re.sub(r'\s', '', b)
-    base = '{:02d}'.format(int(b))
+    base_arr = b.split()
+    #  base = re.sub(r'\s', '', b)
+    #  base = '{:02d}'.format(int(b))
     nickname = pegar_nickname(update.message.from_user.username)
 
     if len(nickname) == 0:
@@ -544,16 +553,18 @@ def cancelar(update, context):
 
     db = shelve.open("guerra", writeback=True)
     try:
-        base_desc = re.sub(r' -.*$', '', db[base])
-        db[base] = base_desc
+        msg = ''
+        for base in base_arr:
+            base = '{:02d}'.format(int(base))
+            base_desc = re.sub(r' -.*$', '', db[base])
+            db[base] = base_desc
+            msg += "Reserva {} cancelada com sucesso!\n".format(base_desc)
     except Exception:
         base = ''
     db.close()
 
     if len(base) == 0:
-        msg = "Você precisa informar uma base válida."
-    else:
-        msg = "Reserva {} cancelada com sucesso!".format(base_desc)
+        msg = "Você precisa informar bases válidas."
 
     falar(update, context, msg)
     return True
