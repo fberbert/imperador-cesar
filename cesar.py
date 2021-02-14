@@ -119,15 +119,14 @@ def echo(update, context):
     except Exception:
         pass
 
-    #  context.bot.send_message(chat_id=chat_id, text="test: " + name)
-
     try:
-
         msg = update.message.text.upper()
 
+        # dispara uma quote do bot
         if re.search(r'C.SAR', msg):
             falar(update, context, quote())
 
+        # dispara um sorriso em emojis
         regjoy = [
             re.compile("KKK"),
             re.compile("HAHAHA"),
@@ -137,6 +136,7 @@ def echo(update, context):
             out = emojize(":joy::joy::joy:", use_aliases=True)
             falar(update, context, out)
 
+        # responde o usuário com um emoji de raiva
         regrage = [
             re.compile("PQP"),
             re.compile("CARALHO"),
@@ -145,9 +145,9 @@ def echo(update, context):
         ]
         if any(regex.search(msg) for regex in regrage):
             out = emojize(":rage:", use_aliases=True)
-            #  falar(update, context, out)
             update.message.reply_text(parse_mode='HTML', quote=True, text=out)
 
+        # dispara um emoji de café
         regcoffee = [re.compile("CAFÉ"), re.compile("CAFE")]
         if any(regex.search(msg) for regex in regcoffee):
             out = emojize(":coffee::coffee::coffee:", use_aliases=True)
@@ -179,7 +179,6 @@ def find(update, context):
     """
     Encontrar um usuário em nossa base de dados
     """
-
     # extrair o nome de usuário da linha de comando
     _, q = decommand(update.message.text)
 
@@ -198,7 +197,7 @@ def find(update, context):
             cont += 1
 
     if cont == 0:
-        falar(update, context, "Desculpe, não encontrei nenhum meliante com esse nome")
+        falar(update, context, "Desculpe, não encontrei nenhum guerreiro com esse nome")
     db.close()
 
 
@@ -233,7 +232,7 @@ def nick(update, context):
         db = shelve.open('membros')
         nick = db[username]['nickname']
         db.close()
-        falar(update, context, "Olá <b>{}</b>, pronto para seguir o imperador César no campo de batalha?".format(nick))
+        falar(update, context, "Olá <b>{}</b>, pronto para lutar ao lado do imperador César no campo de batalha?".format(nick))
     except Exception:
         falar(update, context, "Você ainda não configurou seu nick. Digite:\n\n/setnick")
 
@@ -242,7 +241,6 @@ def users(update, context):
     """
     Listar todos os usuários de nossa base de dados
     """
-
     # open shelve file
     db = shelve.open('membros')
     users = list()
@@ -278,7 +276,7 @@ def chatid(update, context):
     """
     Retorna o chat_id do canal
     """
-    falar(update, context, str(update.effective_chat.id) + '\n' + update.effective_chat.type)
+    falar(update, context, 'ID: ' + str(update.effective_chat.id) + '\n' + 'Tipo: ' + update.effective_chat.type)
 
 
 def ler_arquivo(update, context):
@@ -287,16 +285,15 @@ def ler_arquivo(update, context):
     """
     comando, _ = decommand(update.message.text)
 
-    if comando in ['ajuda', 'help']:
-        source = "./txt/ajuda.txt"
-    if comando == 'regras':
-        source = "./txt/regra[123456].txt"
-    if comando == 'abrirbase':
-        source = "./txt/abrirbase.txt"
-    if comando == 'modelo':
-        source = "./txt/modelo.txt"
-    if comando == 'legendas':
-        source = "./txt/legendas.txt"
+    arquivoDict = {
+        'ajuda': './txt/ajuda.txt',
+        'help': './txt/ajuda.txt',
+        'regras': './txt/regra[123456].txt',
+        'abrirbase': './txt/abrirbase.txt',
+        'modelo': './txt/modelo.txt',
+        'legendas': './txt/legendas.txt'
+    }
+    source = arquivoDict[comando]
 
     for file in sorted(glob.glob(source)):
         f = open(file, "r")
@@ -309,9 +306,10 @@ def repeat(update, context):
     """
     Repetir o que você escreveu
     """
+    global canais
     _, output = decommand(update.message.text)
     context.bot.send_message(
-        chat_id='-1001424488840',
+        chat_id=canais['chat'],
         parse_mode='HTML',
         text=output
     )
@@ -415,7 +413,7 @@ def guerra(update, context, avisar = 0):
 
 def tem_guerra(update, context):
     """
-    Cancela a execução de um comando caso não
+    Middleware que cancela a execução de um comando caso não
     exista guerra em andamento
     """
     try:
@@ -464,7 +462,7 @@ def fala_programada(context):
 
 
 def mensagem(update, context):
-    global textoJob
+    global textoJob, canais
     _, b = decommand(update.message.text)
     parametros = b.split()
 
@@ -492,14 +490,14 @@ def mensagem(update, context):
 
     # -1001424488840 : canal principal da CWB
     # 99952935 : chat privado comigo
-    chat = '-1001424488840'
+    #  chat = '-1001424488840'
     #  chat = '99952935'
     #
     #  context.job_queue.run_repeating(
     context.job_queue.run_once(
         fala_programada,
         timer,
-        context=chat,
+        context=canais['chat'],
         name=str(update.message.chat_id)
     )
     falar(update, context, 'Mensagem programada com sucesso!')
@@ -509,7 +507,6 @@ def mensagem(update, context):
 def falar(update, context, msg, avisar = 0):
     """
     Envia msg para o chat
-    Sala de guerra: -456778807
     """
     global canais
 
