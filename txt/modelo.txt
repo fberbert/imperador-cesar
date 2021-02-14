@@ -1,0 +1,27 @@
+bases: 15
+inimigo: Os Bárbaros
+up: 178
+down: 99
+obs:
+
+3🛡 Bit, Siri, Deus, bobao
+2🛡
+1🛡 Seik, Rui
+
+--- fim obs
+
+01EI346F 🛡
+02EI322
+03DG298 🛡
+04DG306
+05EE293⛩🛡🛡🛡
+06EI328⛩
+07GF258
+08EE244
+09EE234⛩
+10AT194
+11GL197
+12IN159
+13IN150
+14IL105
+15PV95

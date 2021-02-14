@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """
-Bot Imperador César
+Telegram Bot Imperador César
+Author: Fábio Berbert de Paula <fberbert@gmail.com>
+GitHub: https://github.com/fberbert/imperador-cesar
+
+Documentação do python-telegram-bot:
+https://github.com/python-telegram-bot/python-telegram-bot/wiki
 """
 
 # -------------------------------------------------------------
@@ -17,6 +22,7 @@ import os
 import random
 import string
 import shelve
+import glob
 
 # módulo do telegram bot
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
@@ -24,7 +30,15 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 # módulo de emojis
 from emoji import emojize
 
+# módulo de citações de César
 from Quotes import Quotes
+
+# variáveis globais
+textoJob = ''
+canais = {
+    'guerra': '-456778807',
+    'chat': '-1001424488840'
+}
 
 # -------------------------------------------------------------
 # criando o updater e dispatcher para o BOT
@@ -45,14 +59,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
-
-# variáveis globais
-textoJob = ''
-canais = {
-    'guerra': '-456778807',
-    'chat': '-1001424488840'
-}
-
 
 # ----------------------------------------------------------------
 # SEÇÃO DE TRATADORES DE COMANDOS (command handlers)
@@ -84,58 +90,6 @@ def decommand(message):
     except Exception:
         conteudo = ''
     return [comando, conteudo]
-
-
-def ajuda(update, context):
-    """
-    Menu de ajuda
-    """
-    html = """
-Digite:
-
-/ajuda - para obter ajuda
-
-<strong>LISTA DE COMANDOS DO BOT</strong>
-
-/nick - exibe seu nome de jogador no Dominations
-/setnick - configura seu nome de jogador no Dominations
-
-/guerra - exibe informações da guerra atual
-/reservar - reserva uma base para atacar
-/cancelar - cancela a reserva de uma base
-/eliminar - elimina uma base da lista de guerra
-/atualizar - atualiza informações sobre determinada base
-/legendas - exibe as legendas da lista de guerra
-/abrirbase - dica de como abrir uma base em guerra
-
-/find &lt;jogador&gt; - para encontrar o contato de um jogador
-/regras - para acessar a lista de regras da aliança
-
-
-<strong>LISTA DE COMANDOS DE OFICIAIS</strong>
-
-/users - lista todos os membros da aliança
-/modelo - imprime um modelo para registro de nova guerra
-/novaguerra - registra uma nova guerra
-/apagarguerra - apaga a guerra atual
-/obs - atualiza observações sobre a guerra
-/delobs - apaga observações sobre a guerra
-/up - atualiza qto de glórias a vencer
-/down - atualiza qto de glórias a perder
-/inimigo - atualiza o nome do adversário de guerra
-/adicionar - adiciona uma base à lista de guerra
-/inicio - determina o horário de início da guerra
-/delinicio - apaga o horário de início da guerra
-/fim - determina o horário de fim da guerra
-/mensagem - cria uma mensagem programada no chat da CWB-LIS
-
---
-
-<i>Imperador César
-Criado por Mestre Fábio ( @vivaolinux )
-https://github.com/users/fberbert</i>
-"""
-    falar(update, context, html)
 
 
 def quote():
@@ -228,7 +182,7 @@ def find(update, context):
     """
 
     # extrair o nome de usuário da linha de comando
-    c, q = decommand(update.message.text)
+    _, q = decommand(update.message.text)
 
     if len(q) < 3:
         falar(update, context, "Digite uma busca mais específica")
@@ -254,14 +208,17 @@ def setnick(update, context):
     Configura um nickname do jogo para o membro
     """
     username = update.message.from_user.username
-    c, nick = decommand(update.message.text)
+    _, nick = decommand(update.message.text)
 
     if len(nick) > 0:
-        # open shelve file
-        db = shelve.open('membros', writeback=True)
-        db[username]['nickname'] = nick
-        db.close()
-        falar(update, context, "Nome de jogador configurado com sucesso: <b>{}</b>".format(nick))
+        try:
+            # open shelve file
+            db = shelve.open('membros', writeback=True)
+            db[username]['nickname'] = nick
+            db.close()
+            falar(update, context, "Nome de jogador configurado com sucesso: <b>{}</b>".format(nick))
+        except Exception:
+            falar(update, context, "Erro ao configurar o nickname!")
     else:
         falar(update, context, "Informe um nome de jogador válido!")
 
@@ -343,25 +300,28 @@ def chatid(update, context):
     falar(update, context, str(update.effective_chat.id) + '\n' + update.effective_chat.type)
 
 
-def regras(update, context):
+def ler_arquivo(update, context):
+    """
+    Exibe texto de ajuda na tela de acordo com o comando executado
+    """
+    comando, _ = decommand(update.message.text)
 
-    import glob
+    if comando in ['ajuda', 'help']:
+        source = "./txt/ajuda.txt"
+    if comando == 'regras':
+        source = "./txt/regra[123456].txt"
+    if comando == 'abrirbase':
+        source = "./txt/abrirbase.txt"
+    if comando == 'modelo':
+        source = "./txt/modelo.txt"
+    if comando == 'legendas':
+        source = "./txt/legendas.txt"
 
-    for file in sorted(glob.glob("./regras/regra[123456].txt")):
-
+    for file in sorted(glob.glob(source)):
         f = open(file, "r")
         output = f.read()
         f.close()
-
         falar(update, context, output)
-
-
-def abrirbase(update, context):
-    file = "./regras/abrirbase.txt"
-    f = open(file, "r")
-    output = f.read()
-    f.close()
-    falar(update, context, output)
 
 
 def repeat(update, context):
@@ -372,7 +332,7 @@ def repeat(update, context):
         falar(update, context, "Você não tem permissão para este recurso!")
         return False
 
-    c, output = decommand(update.message.text)
+    _, output = decommand(update.message.text)
     context.bot.send_message(
         chat_id='-1001424488840',
         parse_mode='HTML',
@@ -390,7 +350,7 @@ def novaguerra(update, context):
         return False
 
     try:
-        c, modelo = decommand(update.message.text)
+        _, modelo = decommand(update.message.text)
     except Exception:
         return False
 
@@ -515,7 +475,7 @@ def mensagem(update, context):
         return False
 
     global textoJob
-    c, b = decommand(update.message.text)
+    _, b = decommand(update.message.text)
     parametros = b.split()
 
     if len(parametros) < 2:
@@ -578,7 +538,7 @@ def reservar(update, context):
     """
     Reserva uma base
     """
-    c, b = decommand(update.message.text)
+    _, b = decommand(update.message.text)
     base_arr = b.split()
     #  base = re.sub(r'\s', '', b)
     #  base = '{:02d}'.format(int(b))
@@ -619,7 +579,7 @@ def cancelar(update, context):
     """
     Cancela a reserva de uma base
     """
-    c, b = decommand(update.message.text)
+    _, b = decommand(update.message.text)
     base_arr = b.split()
     nickname = pegar_nickname(update.message.from_user.username)
 
@@ -653,7 +613,7 @@ def eliminar(update, context):
     """
     Elimina determinada base da lista de guerra
     """
-    c, b = decommand(update.message.text)
+    _, b = decommand(update.message.text)
     base_arr = b.split()
     #  base = re.sub(r'\s', '', b)
 
@@ -679,7 +639,7 @@ def atualizar(update, context):
     """
     Atualiza informações sobre determinada base
     """
-    c, b = decommand(update.message.text)
+    _, b = decommand(update.message.text)
     base = re.sub(r'\s', '', b)
     pattern = '^([0-9]*)'
     res =  re.search(pattern, base)
@@ -767,60 +727,11 @@ def atualizar_info(update, context):
     return True
 
 
-def legendas(update, context):
-    """
-    Legendas da lista de guerra
-    """
-    falar(update, context, """
-⛩ Cidade proibida
-🛡 Coalizões de defesa
-😈 Torre de bazucas
-🚫 Não atacar
-🕐 Baixar o tempo
-🚁 Base de helicópteros
-⭐ Estrelas conquistadas
-""")
+def teste(update, context):
+    falar(update, context, context.args)
 
 
-def modelo(update, context):
-    """
-    Imprime um modelo/template de guerra
-    """
-    modelo = """
-bases: 15
-inimigo: Os Bárbaros
-up: 178
-down: 99
-obs:
-
-3🛡 Bit, Siri, Deus, bobao
-2🛡
-1🛡 Seik, Rui
-
---- fim obs
-
-01EI346F 🛡
-02EI322
-03DG298 🛡
-04DG306
-05EE293⛩🛡🛡🛡
-06EI328⛩
-07GF258
-08EE244
-09EE234⛩
-10AT194
-11GL197
-12IN159
-13IN150
-14IL105
-15PV95
-"""
-    falar(update, context, modelo)
-
-
-# bloco principal
-# lista de administradores do bot
-
+# BLOCO PRINCIPAL
 # command handlers
 find_handler = CommandHandler('find', find)
 dispatcher.add_handler(find_handler)
@@ -831,11 +742,11 @@ dispatcher.add_handler(users_handler)
 chatid_handler = CommandHandler('chatid', chatid)
 dispatcher.add_handler(chatid_handler)
 
-help_handler = CommandHandler(['help', 'ajuda'], ajuda)
-dispatcher.add_handler(help_handler)
-
-regras_handler = CommandHandler('regras', regras)
-dispatcher.add_handler(regras_handler)
+ler_arquivo_handler = CommandHandler(
+    ['regras', 'help', 'ajuda', 'modelo', 'abrirbase', 'legendas'],
+    ler_arquivo
+)
+dispatcher.add_handler(ler_arquivo_handler)
 
 repeat_handler = CommandHandler('repeat', repeat)
 dispatcher.add_handler(repeat_handler)
@@ -867,20 +778,14 @@ dispatcher.add_handler(setnick_handler)
 nick_handler = CommandHandler('nick', nick)
 dispatcher.add_handler(nick_handler)
 
-modelo_handler = CommandHandler('modelo', modelo)
-dispatcher.add_handler(modelo_handler)
-
-legendas_handler = CommandHandler('legendas', legendas)
-dispatcher.add_handler(legendas_handler)
-
 estrelas_handler = CommandHandler('estrelas', estrelas)
 dispatcher.add_handler(estrelas_handler)
 
-abrirbase_handler = CommandHandler('abrirbase', abrirbase)
-dispatcher.add_handler(abrirbase_handler)
-
 mensagem_handler = CommandHandler('mensagem', mensagem)
 dispatcher.add_handler(mensagem_handler)
+
+teste_handler = CommandHandler('teste', teste)
+dispatcher.add_handler(teste_handler)
 
 atualizar_info_handler = CommandHandler(['obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio'], atualizar_info)
 dispatcher.add_handler(atualizar_info_handler)

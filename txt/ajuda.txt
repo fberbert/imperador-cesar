@@ -1,0 +1,43 @@
+Digite:
+
+/ajuda - para obter ajuda
+
+<strong>LISTA DE COMANDOS DO BOT</strong>
+
+/nick - exibe seu nome de jogador no Dominations
+/setnick - configura seu nome de jogador no Dominations
+
+/guerra - exibe informações da guerra atual
+/reservar - reserva uma base para atacar
+/cancelar - cancela a reserva de uma base
+/eliminar - elimina uma base da lista de guerra
+/atualizar - atualiza informações sobre determinada base
+/legendas - exibe as legendas da lista de guerra
+/abrirbase - dica de como abrir uma base em guerra
+
+/find &lt;jogador&gt; - para encontrar o contato de um jogador
+/regras - para acessar a lista de regras da aliança
+
+
+<strong>LISTA DE COMANDOS DE OFICIAIS</strong>
+
+/users - lista todos os membros da aliança
+/modelo - imprime um modelo para registro de nova guerra
+/novaguerra - registra uma nova guerra
+/apagarguerra - apaga a guerra atual
+/obs - atualiza observações sobre a guerra
+/delobs - apaga observações sobre a guerra
+/up - atualiza qto de glórias a vencer
+/down - atualiza qto de glórias a perder
+/inimigo - atualiza o nome do adversário de guerra
+/adicionar - adiciona uma base à lista de guerra
+/inicio - determina o horário de início da guerra
+/delinicio - apaga o horário de início da guerra
+/fim - determina o horário de fim da guerra
+/mensagem - cria uma mensagem programada no chat da CWB-LIS
+
+--
+
+<i>Imperador César
+Criado por Mestre Fábio ( @vivaolinux )
+https://github.com/users/fberbert</i>
