@@ -116,6 +116,9 @@ Digite:
 /down - atualiza qto de glórias a perder
 /inimigo - atualiza o nome do adversário de guerra
 /adicionar - adiciona uma base à lista de guerra
+/inicio - determina o horário de início da guerra
+/delinicio - apaga o horário de início da guerra
+/fim - determina o horário de fim da guerra
 
 --
 
@@ -468,7 +471,12 @@ def guerra(update, context):
         except Exception:
             pass
 
-    falar(update, context, "CWB-LIS 🆚 {}\n🔼 {} 🔽 {}\n{}\n\n{}\n\n<pre>Início: {}\nFim: {}\n<i>* horário de Brasília</i></pre>".format(inimigo, up, down, obs, bases_string, inicio, fim))
+    horario = ""
+    if len(inicio) > 0:
+        horario += "Início: {}\n".format(inicio)
+    horario += "Fim: {}\n<i>* horário de Brasília</i>".format(fim)
+
+    falar(update, context, "CWB-LIS 🆚 {}\n🔼 {} 🔽 {}\n{}\n\n{}\n\n<pre>{}</pre>".format(inimigo, up, down, obs, bases_string, horario))
     db.close
     return True
 
@@ -659,7 +667,7 @@ def atualizar_info(update, context):
 
     comando, conteudo = decommand(update.message.text)
 
-    if len(conteudo) == 0 and comando != 'delobs':
+    if len(conteudo) == 0 and comando != 'delobs' and comando != 'delinicio':
         msg = "Você precisa informar observações válidas."
         falar(update, context, msg)
         return False
@@ -668,6 +676,9 @@ def atualizar_info(update, context):
     try:
         if comando == 'delobs':
             comando = 'obs'
+            conteudo = ''
+        if comando == 'delinicio':
+            comando = 'inicio'
             conteudo = ''
         db[comando] = conteudo
         msg = 'Informações atualizadas com sucesso!'
@@ -790,7 +801,7 @@ dispatcher.add_handler(estrelas_handler)
 abrirbase_handler = CommandHandler('abrirbase', abrirbase)
 dispatcher.add_handler(abrirbase_handler)
 
-atualizar_info_handler = CommandHandler(['obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim'], atualizar_info)
+atualizar_info_handler = CommandHandler(['obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio'], atualizar_info)
 dispatcher.add_handler(atualizar_info_handler)
 
 echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
