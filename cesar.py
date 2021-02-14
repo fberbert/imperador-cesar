@@ -25,7 +25,7 @@ import shelve
 import glob
 
 # módulo do telegram bot
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, DispatcherHandlerStop
 
 # módulo de emojis
 from emoji import emojize
@@ -64,9 +64,8 @@ logging.basicConfig(
 # SEÇÃO DE TRATADORES DE COMANDOS (command handlers)
 # ----------------------------------------------------------------
 
-
 def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Olá!")
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Olá! Digite:\n\n/ajuda\n\npara maiores informações.")
 
 
 def decommand(message):
@@ -239,19 +238,6 @@ def nick(update, context):
         falar(update, context, "Você ainda não configurou seu nick. Digite:\n\n/setnick")
 
 
-def is_admin(user):
-    """
-    Checa se o usuário atual é admin
-    """
-    # usuários que terão permissão de acesso a comandos especiais
-    authorized = ("vivaolinux", "CelloBit")
-
-    #  if update.message.from_user.username not in authorized:
-    if user not in authorized:
-        return False
-    return True
-
-
 def users(update, context):
     """
     Listar todos os usuários de nossa base de dados
@@ -259,11 +245,6 @@ def users(update, context):
 
     # open shelve file
     db = shelve.open('membros')
-
-    if not is_admin(update.message.from_user.username):
-        falar(update, context, "Você não tem permissão para este recurso!")
-        return False
-
     users = list()
     for key in sorted(db):
         nickname = db[key]['nickname'] if len(db[key]['nickname']) > 1 else 'Não configurado'
@@ -328,10 +309,6 @@ def repeat(update, context):
     """
     Repetir o que você escreveu
     """
-    if not is_admin(update.message.from_user.username):
-        falar(update, context, "Você não tem permissão para este recurso!")
-        return False
-
     _, output = decommand(update.message.text)
     context.bot.send_message(
         chat_id='-1001424488840',
@@ -344,24 +321,13 @@ def novaguerra(update, context):
     """
     Registra uma nova guerra
     """
-
-    if not is_admin(update.message.from_user.username):
-        falar(update, context, "Você não tem permissão para este recurso!")
-        return False
-
     try:
         _, modelo = decommand(update.message.text)
     except Exception:
         return False
 
     if modelo == '':
-        falar(update, context, """
-Informe um modelo válido de guerra. Digite:
-
-/modelo
-
-para ter acesso a um modelo/template de guerra válido.
-""")
+        falar(update, context, "Informe um modelo válido de guerra. Digite:\n\n/modelo\n\npara ter acesso a um modelo/template de guerra válido.")
         return False
 
     # processar texto
@@ -409,11 +375,6 @@ def apagarguerra(update, context):
     """
     Deleta informações sobre a guerra atual
     """
-
-    if not is_admin(update.message.from_user.username):
-        falar(update, context, "Você não tem permissão para este recurso!")
-        return False
-
     os.remove('guerra.db')
     falar(update, context, "Guerra removida com sucesso!")
 
@@ -452,6 +413,39 @@ def guerra(update, context, avisar = 0):
     return True
 
 
+def tem_guerra(update, context):
+    """
+    Cancela a execução de um comando caso não
+    exista guerra em andamento
+    """
+    try:
+        db = shelve.open('guerra')
+        if db['inimigo']:
+            return True
+        db.close()
+    except Exception:
+        pass
+
+    falar(update, context, 'Nenhuma guerra em andamento!')
+    raise DispatcherHandlerStop
+
+
+def admin_only(update, context):
+    """
+    Middleware para comandos de admin
+    """
+    # usuários que terão permissão de acesso a comandos especiais
+    authorized = []
+    with open('txt/admin.txt') as file:
+        for line in file:
+            authorized.append(line.strip())
+
+    #  if update.message.from_user.username not in authorized:
+    if update.message.from_user.username not in authorized:
+        falar(update, context, "Você não tem permissão para este recurso!")
+        raise DispatcherHandlerStop
+
+
 def pegar_nickname(user):
     """
     Retorna o nome de jogador de user
@@ -470,10 +464,6 @@ def fala_programada(context):
 
 
 def mensagem(update, context):
-    if not is_admin(update.message.from_user.username):
-        falar(update, context, "Você não tem permissão para este recurso!")
-        return False
-
     global textoJob
     _, b = decommand(update.message.text)
     parametros = b.split()
@@ -642,7 +632,7 @@ def atualizar(update, context):
     _, b = decommand(update.message.text)
     base = re.sub(r'\s', '', b)
     pattern = '^([0-9]*)'
-    res =  re.search(pattern, base)
+    res = re.search(pattern, base)
     base_num = '{:02d}'.format(int(res.group(1)))
     if len(base_num) == 0:
         msg = "Você precisa informar uma base válida."
@@ -698,11 +688,6 @@ def atualizar_info(update, context):
     """
     Atualiza observações da guerra
     """
-
-    if not is_admin(update.message.from_user.username):
-        falar(update, context, "Você não tem permissão para este recurso!")
-        return False
-
     comando, conteudo = decommand(update.message.text)
 
     if len(conteudo) == 0 and comando != 'delobs' and comando != 'delinicio':
@@ -728,67 +713,76 @@ def atualizar_info(update, context):
 
 
 def teste(update, context):
-    falar(update, context, context.args)
+    falar(update, context, 'ola mundo')
 
 
 # BLOCO PRINCIPAL
 # command handlers
+start_handler = CommandHandler('start', start)
+dispatcher.add_handler(start_handler, 0)
+
+teste_handler = CommandHandler(['teste', 'start'], teste)
+dispatcher.add_handler(teste_handler, 1)
+
+admin_only_handler = CommandHandler(['mensagem', 'users', 'repeat', 'novaguerra', 'apagarguerra', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio'], admin_only)
+dispatcher.add_handler(admin_only_handler, 0)
+
+tem_guerra_handler = CommandHandler(['reservar', 'cancelar', 'eliminar', 'atualizar', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio'], tem_guerra)
+dispatcher.add_handler(tem_guerra_handler, 1)
+
 find_handler = CommandHandler('find', find)
-dispatcher.add_handler(find_handler)
+dispatcher.add_handler(find_handler, 2)
 
 users_handler = CommandHandler('users', users)
-dispatcher.add_handler(users_handler)
+dispatcher.add_handler(users_handler, 2)
 
 chatid_handler = CommandHandler('chatid', chatid)
-dispatcher.add_handler(chatid_handler)
+dispatcher.add_handler(chatid_handler, 2)
 
 ler_arquivo_handler = CommandHandler(
     ['regras', 'help', 'ajuda', 'modelo', 'abrirbase', 'legendas'],
     ler_arquivo
 )
-dispatcher.add_handler(ler_arquivo_handler)
+dispatcher.add_handler(ler_arquivo_handler, 2)
 
 repeat_handler = CommandHandler('repeat', repeat)
-dispatcher.add_handler(repeat_handler)
+dispatcher.add_handler(repeat_handler, 2)
 
 novaguerra_handler = CommandHandler('novaguerra', novaguerra)
-dispatcher.add_handler(novaguerra_handler)
+dispatcher.add_handler(novaguerra_handler, 2)
 
 guerra_handler = CommandHandler('guerra', guerra)
-dispatcher.add_handler(guerra_handler)
+dispatcher.add_handler(guerra_handler, 2)
 
 apagarguerra_handler = CommandHandler('apagarguerra', apagarguerra)
-dispatcher.add_handler(apagarguerra_handler)
+dispatcher.add_handler(apagarguerra_handler, 2)
 
 reservar_handler = CommandHandler('reservar', reservar)
-dispatcher.add_handler(reservar_handler)
+dispatcher.add_handler(reservar_handler, 2)
 
 eliminar_handler = CommandHandler('eliminar', eliminar)
-dispatcher.add_handler(eliminar_handler)
+dispatcher.add_handler(eliminar_handler, 2)
 
 cancelar_handler = CommandHandler('cancelar', cancelar)
-dispatcher.add_handler(cancelar_handler)
+dispatcher.add_handler(cancelar_handler, 2)
 
 atualizar_handler = CommandHandler('atualizar', atualizar)
-dispatcher.add_handler(atualizar_handler)
+dispatcher.add_handler(atualizar_handler, 2)
 
 setnick_handler = CommandHandler('setnick', setnick)
-dispatcher.add_handler(setnick_handler)
+dispatcher.add_handler(setnick_handler, 2)
 
 nick_handler = CommandHandler('nick', nick)
-dispatcher.add_handler(nick_handler)
+dispatcher.add_handler(nick_handler, 2)
 
 estrelas_handler = CommandHandler('estrelas', estrelas)
-dispatcher.add_handler(estrelas_handler)
+dispatcher.add_handler(estrelas_handler, 2)
 
 mensagem_handler = CommandHandler('mensagem', mensagem)
-dispatcher.add_handler(mensagem_handler)
-
-teste_handler = CommandHandler('teste', teste)
-dispatcher.add_handler(teste_handler)
+dispatcher.add_handler(mensagem_handler, 2)
 
 atualizar_info_handler = CommandHandler(['obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio'], atualizar_info)
-dispatcher.add_handler(atualizar_info_handler)
+dispatcher.add_handler(atualizar_info_handler, 2)
 
 echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
 dispatcher.add_handler(echo_handler)

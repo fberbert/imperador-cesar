@@ -12,6 +12,7 @@ Digite:
 /cancelar - cancela a reserva de uma base
 /eliminar - elimina uma base da lista de guerra
 /atualizar - atualiza informações sobre determinada base
+/estrelas - adiciona estrelas a uma base da lista de guerra
 /legendas - exibe as legendas da lista de guerra
 /abrirbase - dica de como abrir uma base em guerra
 
@@ -30,7 +31,6 @@ Digite:
 /up - atualiza qto de glórias a vencer
 /down - atualiza qto de glórias a perder
 /inimigo - atualiza o nome do adversário de guerra
-/adicionar - adiciona uma base à lista de guerra
 /inicio - determina o horário de início da guerra
 /delinicio - apaga o horário de início da guerra
 /fim - determina o horário de fim da guerra
