@@ -291,7 +291,8 @@ def ler_arquivo(update, context):
         'regras': './txt/regra[123456].txt',
         'abrirbase': './txt/abrirbase.txt',
         'modelo': './txt/modelo.txt',
-        'legendas': './txt/legendas.txt'
+        'legendas': './txt/legendas.txt',
+        'listaradmin': './txt/admin.txt'
     }
     source = arquivoDict[comando]
 
@@ -436,10 +437,10 @@ def admin_only(update, context):
     authorized = []
     with open('txt/admin.txt') as file:
         for line in file:
-            authorized.append(line.strip())
+            authorized.append(line.strip().upper())
 
     #  if update.message.from_user.username not in authorized:
-    if update.message.from_user.username not in authorized:
+    if update.message.from_user.username.upper() not in authorized:
         falar(update, context, "Você não tem permissão para este recurso!")
         raise DispatcherHandlerStop
 
@@ -709,6 +710,41 @@ def atualizar_info(update, context):
     return True
 
 
+def gerenciaradmin(update, context):
+    comando, admin = decommand(update.message.text)
+    if len(admin) == 0:
+        falar(update, context, 'Informe o username do admin!')
+        return False
+
+    try:
+        lista_admin = []
+        # converter admins para uma lista
+        with open('./txt/admin.txt') as file:
+            for line in file:
+                lista_admin.append(line.strip())
+        file.close()
+
+        msg = ''
+        if comando == 'adicionaradmin':
+            # adicionar o novo admin
+            lista_admin.append(admin)
+            msg = '{} adicionado como admin!'.format(admin)
+        elif comando == 'removeradmin':
+            # remover admin
+            lista_admin.remove(admin)
+            msg = '{} removido de admin!'.format(admin)
+
+        # gravar nova lista de admins
+        with open('./txt/admin.txt', 'w') as file:
+            for person in lista_admin:
+                file.write("%s\n" % person)
+        file.close()
+
+        falar(update, context, msg)
+    except Exception:
+        falar(update, context, 'Erro ao atualizar lista de admins!')
+
+
 def teste(update, context):
     falar(update, context, 'ola mundo')
 
@@ -721,7 +757,7 @@ dispatcher.add_handler(start_handler, 0)
 teste_handler = CommandHandler(['teste', 'start'], teste)
 dispatcher.add_handler(teste_handler, 1)
 
-admin_only_handler = CommandHandler(['mensagem', 'users', 'repeat', 'novaguerra', 'apagarguerra', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio'], admin_only)
+admin_only_handler = CommandHandler(['mensagem', 'users', 'repeat', 'novaguerra', 'apagarguerra', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio', 'listaradmin', 'adicionaradmin', 'removeradmin'], admin_only)
 dispatcher.add_handler(admin_only_handler, 0)
 
 tem_guerra_handler = CommandHandler(['reservar', 'cancelar', 'eliminar', 'atualizar', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio'], tem_guerra)
@@ -737,7 +773,7 @@ chatid_handler = CommandHandler('chatid', chatid)
 dispatcher.add_handler(chatid_handler, 2)
 
 ler_arquivo_handler = CommandHandler(
-    ['regras', 'help', 'ajuda', 'modelo', 'abrirbase', 'legendas'],
+    ['regras', 'help', 'ajuda', 'modelo', 'abrirbase', 'legendas', 'listaradmin'],
     ler_arquivo
 )
 dispatcher.add_handler(ler_arquivo_handler, 2)
@@ -780,6 +816,9 @@ dispatcher.add_handler(mensagem_handler, 2)
 
 atualizar_info_handler = CommandHandler(['obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio'], atualizar_info)
 dispatcher.add_handler(atualizar_info_handler, 2)
+
+gerenciaradmin_handler = CommandHandler(['adicionaradmin', 'removeradmin'], gerenciaradmin)
+dispatcher.add_handler(gerenciaradmin_handler, 2)
 
 echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
 dispatcher.add_handler(echo_handler)

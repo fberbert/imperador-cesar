@@ -35,6 +35,9 @@ Digite:
 /delinicio - apaga o horário de início da guerra
 /fim - determina o horário de fim da guerra
 /mensagem - cria uma mensagem programada no chat da CWB-LIS
+/listaradmin - lista os administradores do BOT
+/adicionaradmin - adicionar administrador do BOT
+/removeradmin - remove administrador do BOT
 
 --
 
