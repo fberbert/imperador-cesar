@@ -46,6 +46,14 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+# variáveis globais
+textoJob = ''
+canais = {
+    'guerra': '-456778807',
+    'chat': '-1001424488840'
+}
+
+
 # ----------------------------------------------------------------
 # SEÇÃO DE TRATADORES DE COMANDOS (command handlers)
 # ----------------------------------------------------------------
@@ -119,6 +127,7 @@ Digite:
 /inicio - determina o horário de início da guerra
 /delinicio - apaga o horário de início da guerra
 /fim - determina o horário de fim da guerra
+/mensagem - cria uma mensagem programada no chat da CWB-LIS
 
 --
 
@@ -183,7 +192,8 @@ def echo(update, context):
         ]
         if any(regex.search(msg) for regex in regrage):
             out = emojize(":rage:", use_aliases=True)
-            falar(update, context, out)
+            #  falar(update, context, out)
+            update.message.reply_text(parse_mode='HTML', quote=True, text=out)
 
         regcoffee = [re.compile("CAFÉ"), re.compile("CAFE")]
         if any(regex.search(msg) for regex in regcoffee):
@@ -429,6 +439,7 @@ para ter acesso a um modelo/template de guerra válido.
 
         falar(update, context, "Guerra registrada com sucesso! Para maiores informações, digite:\n\n/guerra")
         db.close()
+        guerra(update, context, 1)
     except Exception:
         falar(update, context, "Modelo de guerra inválido. Digite:\n\n/modelo\n\ne tente novamente.")
     return True
@@ -447,7 +458,7 @@ def apagarguerra(update, context):
     falar(update, context, "Guerra removida com sucesso!")
 
 
-def guerra(update, context):
+def guerra(update, context, avisar = 0):
     """
     Exibe informações da guerra atual
     """
@@ -476,7 +487,7 @@ def guerra(update, context):
         horario += "Início: {}\n".format(inicio)
     horario += "Fim: {}\n<i>* horário de Brasília</i>".format(fim)
 
-    falar(update, context, "CWB-LIS 🆚 {}\n🔼 {} 🔽 {}\n{}\n\n{}\n\n<pre>{}</pre>".format(inimigo, up, down, obs, bases_string, horario))
+    falar(update, context, "CWB-LIS 🆚 {}\n🔼 {} 🔽 {}\n{}\n\n{}\n\n<pre>{}</pre>".format(inimigo, up, down, obs, bases_string, horario), avisar)
     db.close
     return True
 
@@ -493,13 +504,71 @@ def pegar_nickname(user):
         return ''
 
 
-def falar(update, context, msg):
+def fala_programada(context):
+    job = context.job
+    context.bot.send_message(job.context, text=textoJob)
+
+
+def mensagem(update, context):
+    if not is_admin(update.message.from_user.username):
+        falar(update, context, "Você não tem permissão para este recurso!")
+        return False
+
+    global textoJob
+    c, b = decommand(update.message.text)
+    parametros = b.split()
+
+    if len(parametros) < 2:
+        falar(update, context, 'Uso:\n\n/mensagem [tempo] [texto]\n\nonde [tempo] é quanto tempo para disparar a mensagem. O formato pode ser, por exemplo: 50s, 2m ou 6h')
+        return False
+
+    try:
+        # convertendo o tempo em segundos
+        timer = parametros.pop(0)
+        pattern = '^([0-9]*)([a-zA-Z])$'
+        res = re.search(pattern, timer)
+        timer = int(res.group(1))
+        tipo = res.group(2)
+
+        if tipo == 'm':
+            timer = timer * 60
+        elif tipo == 'h':
+            timer = timer * 60 * 60
+    except Exception:
+        falar(update, context, 'Informe um intervalo de tempo válido!')
+        return False
+
+    textoJob = " ".join(str(x) for x in parametros)
+
+    # -1001424488840 : canal principal da CWB
+    # 99952935 : chat privado comigo
+    chat = '-1001424488840'
+    #  chat = '99952935'
+    #
+    #  context.job_queue.run_repeating(
+    context.job_queue.run_once(
+        fala_programada,
+        timer,
+        context=chat,
+        name=str(update.message.chat_id)
+    )
+    falar(update, context, 'Mensagem programada com sucesso!')
+    #  update.message.reply_text(parse_mode='HTML', text='oi <i>doido</i>')
+
+
+def falar(update, context, msg, avisar = 0):
     """
     Envia msg para o chat
     Sala de guerra: -456778807
     """
+    global canais
+
+    chat = update.effective_chat.id
+    if avisar == 1:
+        chat = canais['guerra']
+
     context.bot.send_message(
-        chat_id=update.effective_chat.id,
+        chat_id=chat,
         parse_mode='HTML',
         text=msg
     )
@@ -541,6 +610,8 @@ def reservar(update, context):
         msg = "Você precisa informar uma base válida."
 
     falar(update, context, msg)
+    if "sucesso" in msg:
+        guerra(update, context, 1)
     return True
 
 
@@ -550,8 +621,6 @@ def cancelar(update, context):
     """
     c, b = decommand(update.message.text)
     base_arr = b.split()
-    #  base = re.sub(r'\s', '', b)
-    #  base = '{:02d}'.format(int(b))
     nickname = pegar_nickname(update.message.from_user.username)
 
     if len(nickname) == 0:
@@ -571,10 +640,12 @@ def cancelar(update, context):
         base = ''
     db.close()
 
-    if len(base) == 0:
+    if len(base_arr) == 0:
         msg = "Você precisa informar bases válidas."
 
     falar(update, context, msg)
+    if "sucesso" in msg:
+        guerra(update, context, 1)
     return True
 
 
@@ -601,6 +672,7 @@ def eliminar(update, context):
             msg = 'Erro ao eliminar a base. Informe uma base válida!'
         db.close()
     falar(update, context, msg)
+    guerra(update, context, 1)
 
 
 def atualizar(update, context):
@@ -612,7 +684,6 @@ def atualizar(update, context):
     pattern = '^([0-9]*)'
     res =  re.search(pattern, base)
     base_num = '{:02d}'.format(int(res.group(1)))
-
     if len(base_num) == 0:
         msg = "Você precisa informar uma base válida."
     else:
@@ -627,21 +698,26 @@ def atualizar(update, context):
             msg = 'Erro ao atualizar a base!'
         db.close()
     falar(update, context, msg)
+    if "sucesso" in msg:
+        guerra(update, context, 1)
 
 
 def estrelas(update, context):
     """
     Atualiza estrelas sobre determinada base
     """
-    pattern = '^\/([^\s]*)\s([\d]*)\s(\d*)$'
-    res = re.search(pattern, update.message.text)
-    #  comando = res.group(1)
-    base = res.group(2)
-    base = '{:02d}'.format(int(base))
-    estrelas = res.group(3)
+    try:
+        pattern = '^\/([^\s]*)\s([\d]*)\s(\d*)$'
+        res = re.search(pattern, update.message.text)
+        #  comando = res.group(1)
+        base = res.group(2)
+        base = '{:02d}'.format(int(base))
+        estrelas = res.group(3)
+    except Exception:
+        base = ''
 
     if len(base) == 0:
-        msg = "Você precisa informar uma base válida."
+        msg = "Você precisa informar a base e a quantidade de estrelas"
     else:
         db = shelve.open("guerra", writeback=True)
         try:
@@ -654,6 +730,8 @@ def estrelas(update, context):
             msg = 'Erro ao atualizar a base!'
         db.close()
     falar(update, context, msg)
+    if "sucesso" in msg:
+        guerra(update, context, 1)
 
 
 def atualizar_info(update, context):
@@ -800,6 +878,9 @@ dispatcher.add_handler(estrelas_handler)
 
 abrirbase_handler = CommandHandler('abrirbase', abrirbase)
 dispatcher.add_handler(abrirbase_handler)
+
+mensagem_handler = CommandHandler('mensagem', mensagem)
+dispatcher.add_handler(mensagem_handler)
 
 atualizar_info_handler = CommandHandler(['obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio'], atualizar_info)
 dispatcher.add_handler(atualizar_info_handler)
