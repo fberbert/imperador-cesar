@@ -292,15 +292,19 @@ def ler_arquivo(update, context):
         'abrirbase': './txt/abrirbase.txt',
         'modelo': './txt/modelo.txt',
         'legendas': './txt/legendas.txt',
+        'dica1': './txt/dica1.txt',
         'listaradmin': './txt/admin.txt'
     }
     source = arquivoDict[comando]
+    avisar = 0
+    if comando in ['dica1']:
+        avisar = 2
 
     for file in sorted(glob.glob(source)):
         f = open(file, "r")
         output = f.read()
         f.close()
-        falar(update, context, output)
+        falar(update, context, output, avisar)
 
 
 def repeat(update, context):
@@ -514,6 +518,8 @@ def falar(update, context, msg, avisar = 0):
     chat = update.effective_chat.id
     if avisar == 1:
         chat = canais['guerra']
+    if avisar == 2:
+        chat = canais['chat']
 
     context.bot.send_message(
         chat_id=chat,
@@ -646,8 +652,8 @@ def atualizar(update, context):
             msg = 'Erro ao atualizar a base!'
         db.close()
     falar(update, context, msg)
-    if "sucesso" in msg:
-        guerra(update, context, 1)
+    #  if "sucesso" in msg:
+        #  guerra(update, context, 1)
 
 
 def estrelas(update, context):
@@ -655,30 +661,37 @@ def estrelas(update, context):
     Atualiza estrelas sobre determinada base
     """
     try:
-        pattern = '^\/([^\s]*)\s([\d]*)\s(\d*)$'
-        res = re.search(pattern, update.message.text)
-        #  comando = res.group(1)
-        base = res.group(2)
+        comando, parametros = decommand(update.message.text)
+        pattern = '^([\d]*)\s(\d*)$'
+        res = re.search(pattern, parametros)
+        base = res.group(1)
         base = '{:02d}'.format(int(base))
-        estrelas = res.group(3)
+        estrelas = res.group(2)
     except Exception:
         base = ''
 
     if len(base) == 0:
-        msg = "Você precisa informar a base e a quantidade de estrelas"
+        msg = "Você precisa informar a base e a quantidade de {}".format(comando)
     else:
         db = shelve.open("guerra", writeback=True)
         try:
-            estrelas = int(estrelas) * '⭐️'
-            base_desc = re.sub(r'\s.*$', '', db[base])
-            txt = base_desc + ' ' + estrelas
+
+            if comando == 'estrelas':
+                estrelas = int(estrelas) * '⭐️'
+                base_desc = re.sub(r'[\s⭐️].*$', '', db[base])
+                txt = base_desc + ' ' + estrelas
+            elif comando == 'defesas':
+                estrelas = int(estrelas) * '🛡'
+                base_desc = re.sub(r'[\s🛡].*$', '', db[base])
+                txt = base_desc + estrelas
+
             db[base] = txt
             msg = 'Base {} atualizada com sucesso!'.format(base_desc)
-        except Exception:
-            msg = 'Erro ao atualizar a base!'
+        except Exception as e:
+            msg = 'Erro ao atualizar a base!\n\n{}'.format(str(e))
         db.close()
     falar(update, context, msg)
-    if "sucesso" in msg:
+    if "sucesso" in msg and comando == 'estrelas':
         guerra(update, context, 1)
 
 
@@ -757,7 +770,7 @@ dispatcher.add_handler(start_handler, 0)
 teste_handler = CommandHandler(['teste', 'start'], teste)
 dispatcher.add_handler(teste_handler, 1)
 
-admin_only_handler = CommandHandler(['mensagem', 'users', 'repeat', 'novaguerra', 'apagarguerra', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio', 'listaradmin', 'adicionaradmin', 'removeradmin'], admin_only)
+admin_only_handler = CommandHandler(['mensagem', 'users', 'repeat', 'novaguerra', 'apagarguerra', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio', 'listaradmin', 'adicionaradmin', 'removeradmin', 'defesas'], admin_only)
 dispatcher.add_handler(admin_only_handler, 0)
 
 tem_guerra_handler = CommandHandler(['reservar', 'cancelar', 'eliminar', 'atualizar', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio'], tem_guerra)
@@ -773,7 +786,7 @@ chatid_handler = CommandHandler('chatid', chatid)
 dispatcher.add_handler(chatid_handler, 2)
 
 ler_arquivo_handler = CommandHandler(
-    ['regras', 'help', 'ajuda', 'modelo', 'abrirbase', 'legendas', 'listaradmin'],
+    ['regras', 'help', 'ajuda', 'modelo', 'abrirbase', 'legendas', 'listaradmin', 'dica1'],
     ler_arquivo
 )
 dispatcher.add_handler(ler_arquivo_handler, 2)
@@ -808,7 +821,7 @@ dispatcher.add_handler(setnick_handler, 2)
 nick_handler = CommandHandler('nick', nick)
 dispatcher.add_handler(nick_handler, 2)
 
-estrelas_handler = CommandHandler('estrelas', estrelas)
+estrelas_handler = CommandHandler(['estrelas', 'defesas'], estrelas)
 dispatcher.add_handler(estrelas_handler, 2)
 
 mensagem_handler = CommandHandler('mensagem', mensagem)

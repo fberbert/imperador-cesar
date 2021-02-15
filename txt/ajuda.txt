@@ -6,7 +6,6 @@ Digite:
 
 /nick - exibe seu nome de jogador no Dominations
 /setnick - configura seu nome de jogador no Dominations
-
 /guerra - exibe informações da guerra atual
 /reservar - reserva uma base para atacar
 /cancelar - cancela a reserva de uma base
@@ -15,7 +14,7 @@ Digite:
 /estrelas - adiciona estrelas a uma base da lista de guerra
 /legendas - exibe as legendas da lista de guerra
 /abrirbase - dica de como abrir uma base em guerra
-
+/dica1 - exibe dicas básicas de como lançar seus ataques na lista de guerra
 /find &lt;jogador&gt; - para encontrar o contato de um jogador
 /regras - para acessar a lista de regras da aliança
 
@@ -34,6 +33,7 @@ Digite:
 /inicio - determina o horário de início da guerra
 /delinicio - apaga o horário de início da guerra
 /fim - determina o horário de fim da guerra
+/defesas - atualiza quantidade de defesas de uma base
 /mensagem - cria uma mensagem programada no chat da CWB-LIS
 /listaradmin - lista os administradores do BOT
 /adicionaradmin - adicionar administrador do BOT
