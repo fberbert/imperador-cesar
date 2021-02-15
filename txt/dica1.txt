@@ -1,0 +1,12 @@
+Nobres tribunos, não sou o Farol de Alexandria mas permitam-me iluminá-los com um pouco de conhecimento necessário para uma boa interação durante a guerra. Os comandos mais comuns que utilizarão, dado BASE sendo o número da base do seu adversário:
+
+/reservar BASE [BASE]
+/cancelar BASE [BASE]
+/eliminar BASE [BASE]
+/estrelas BASE ESTRELAS
+
+Exemplos:
+
+/reservar 1 
+/reservar 3 4
+/estrelas 4 3 (3 estrelas conquistadas na base 4)
