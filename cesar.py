@@ -100,13 +100,14 @@ def quote():
     return quotes.quote()
 
 
-def echo(update, context):
+def verificar_usuario(update, context):
     """
-    Recursos de iteração do bot nos canais em que ele participa
+    - verifica se usuário tem username configurado
+    - verifica se usuário está gravado no banco de dados
     """
-
     # definição de variáveis locais
     name = ""
+    username = ""
     try:
         chat_id = update.effective_chat.id
         username = update.message.from_user.username
@@ -119,6 +120,30 @@ def echo(update, context):
     except Exception:
         pass
 
+    # verificar se o usuário possui username configurado
+    if username == "":
+        output = "Por favor " + name + ", configure um username no Telegram!\n\nNo aplicativo, clique em <strong>Configurações > Nome de usuário</strong>. Basta escolher um nome de sua preferência, ele será seu ID no Telegram, usado para entrarmos em contato contigo sem a necessidade de saber seu número de telefone."
+        falar(update, context, output)
+        raise DispatcherHandlerStop
+    else:
+        # armazena os dados do usuário em nossa base de dados
+        # ou atualiza se já existir
+        try:
+            db = shelve.open('membros', writeback=True)
+            try:
+                nickname = db[username]['nickname']
+            except Exception:
+                nickname = ''
+            db[username] = {"id": userid, "name": name, "nickname": nickname}
+            db.close()
+        except Exception:
+            pass
+
+
+def conversacao(update, context):
+    """
+    Recursos de iteração do bot nos canais em que ele participa
+    """
     try:
         msg = update.message.text.upper()
 
@@ -156,24 +181,6 @@ def echo(update, context):
     except Exception:
         pass
 
-    # verificar se o usuário possui username configurado
-    if not username:
-        output = "Por favor " + name + ", configure um username no Telegram!\n\nNo aplicativo, clique em <strong>Configurações > Nome de usuário</strong>. Basta escolher um nome de sua preferência, ele será seu ID no Telegram, usado para entrarmos em contato contigo sem a necessidade de saber seu número de telefone."
-        falar(update, context, output)
-
-    # armazena os dados do usuário em nossa base de dados
-    # ou atualiza se já existir
-    try:
-        db = shelve.open('membros', writeback=True)
-        try:
-            nickname = db[username]['nickname']
-        except Exception:
-            nickname = ''
-        db[username] = {"id": userid, "name": name, "nickname": nickname}
-        db.close()
-    except Exception:
-        pass
-
 
 def find(update, context):
     """
@@ -197,7 +204,7 @@ def find(update, context):
             cont += 1
 
     if cont == 0:
-        falar(update, context, "Desculpe, não encontrei nenhum guerreiro com esse nome")
+        falar(update, context, "Desculpe, não encontrei nenhum legionário com essa identificação")
     db.close()
 
 
@@ -215,10 +222,10 @@ def setnick(update, context):
             db[username]['nickname'] = nick
             db.close()
             falar(update, context, "Nome de jogador configurado com sucesso: <b>{}</b>".format(nick))
-        except Exception:
-            falar(update, context, "Erro ao configurar o nickname!")
+        except Exception as e:
+            falar(update, context, "Erro ao configurar o nickname!\n\n{}".format(str(e)))
     else:
-        falar(update, context, "Informe um nome de jogador válido!")
+        falar(update, context, "Informe um nome de jogador válido! Exemplo:\n\n/setnick Jacinto Pinto")
 
 
 def nick(update, context):
@@ -386,8 +393,8 @@ def guerra(update, context, avisar = 0):
     """
     Exibe informações da guerra atual
     """
-    db = shelve.open('guerra')
     try:
+        db = shelve.open('guerra')
         inimigo = db['inimigo']
         jogadores = db['jogadores']
         up = db['up']
@@ -395,6 +402,7 @@ def guerra(update, context, avisar = 0):
         obs = db['obs']
         inicio = db['inicio']
         fim = db['fim']
+        db.close
     except Exception:
         falar(update, context, "Nenhuma guerra encontrada! Digite:\n\n/novaguerra\n\npara registrar uma.")
         return False
@@ -408,12 +416,14 @@ def guerra(update, context, avisar = 0):
 
     horario = ""
     if len(inicio) > 0:
-        horario += "Início: {}\n".format(inicio)
-    horario += "Fim: {}\n<i>* horário de Brasília</i>".format(fim)
+        horario += "{}\n".format(inicio)
+    #  horario += "Fim: {}\n<i>* horário de Brasília</i>".format(fim)
+    horario += "{}\n".format(fim)
 
-    falar(update, context, "CWB-LIS 🆚 {}\n🔼 {} 🔽 {}\n{}\n\n{}\n\n<pre>{}</pre>".format(inimigo, up, down, obs, bases_string, horario), avisar)
-    db.close
-    return True
+    saida = "CWB-LIS 🆚 {}\n🔼 {} 🔽 {}\n{}\n\n{}\n\n<pre>{}</pre>".format(inimigo, up, down, obs, bases_string, horario)
+    if avisar == 1:
+        return saida
+    falar(update, context, saida)
 
 
 def tem_guerra(update, context):
@@ -509,23 +519,36 @@ def mensagem(update, context):
     #  update.message.reply_text(parse_mode='HTML', text='oi <i>doido</i>')
 
 
-def falar(update, context, msg, avisar = 0):
+def falar(update, context, msg, avisar=0, message_id=0):
     """
     Envia msg para o chat
     """
     global canais
 
     chat = update.effective_chat.id
-    if avisar == 1:
-        chat = canais['guerra']
+    #  if avisar == 1:
+        #  chat = canais['guerra']
+        # apagar mensagem anterior
+        #  if message_id != 0:
+            #  context.bot.delete_message(
+                #  chat_id=chat,
+                #  message_id=message_id
+            #  )
     if avisar == 2:
         chat = canais['chat']
 
-    context.bot.send_message(
+    res = context.bot.send_message(
         chat_id=chat,
         parse_mode='HTML',
         text=msg
     )
+
+    #  if avisar == 1:
+        # armazenar message_id
+        #  message_ID = res.message_id
+        #  db = shelve.open('guerra', writeback=True)
+        #  db['message_ID'] = message_ID
+        #  db.close()
 
 
 def reservar(update, context):
@@ -541,11 +564,13 @@ def reservar(update, context):
     if len(nickname) == 0:
         msg = "Você precisa registrar seu nickname no jogo. Digite:\n\n/nickname"
         falar(update, context, msg)
+        raise DispatcherHandlerStop
         return False
 
     if len(base_arr) == 0:
         msg = "Você precisa informar uma base válida."
         falar(update, context, msg)
+        raise DispatcherHandlerStop
         return False
 
     db = shelve.open("guerra", writeback=True)
@@ -564,9 +589,8 @@ def reservar(update, context):
         msg = "Você precisa informar uma base válida."
 
     falar(update, context, msg)
-    if "sucesso" in msg:
-        guerra(update, context, 1)
-    return True
+    if not "sucesso" in msg:
+        raise DispatcherHandlerStop
 
 
 def cancelar(update, context):
@@ -580,6 +604,7 @@ def cancelar(update, context):
     if len(nickname) == 0:
         msg = "Você precisa registrar seu nickname no jogo. Digite:\n\n/nickname"
         falar(update, context, msg)
+        raise DispatcherHandlerStop
         return False
 
     db = shelve.open("guerra", writeback=True)
@@ -598,9 +623,8 @@ def cancelar(update, context):
         msg = "Você precisa informar bases válidas."
 
     falar(update, context, msg)
-    if "sucesso" in msg:
-        guerra(update, context, 1)
-    return True
+    if not "sucesso" in msg:
+        raise DispatcherHandlerStop
 
 
 def eliminar(update, context):
@@ -626,7 +650,8 @@ def eliminar(update, context):
             msg = 'Erro ao eliminar a base. Informe uma base válida!'
         db.close()
     falar(update, context, msg)
-    guerra(update, context, 1)
+    if not "sucesso" in msg:
+        raise DispatcherHandlerStop
 
 
 def atualizar(update, context):
@@ -652,8 +677,8 @@ def atualizar(update, context):
             msg = 'Erro ao atualizar a base!'
         db.close()
     falar(update, context, msg)
-    #  if "sucesso" in msg:
-        #  guerra(update, context, 1)
+    if not "sucesso" in msg:
+        raise DispatcherHandlerStop
 
 
 def estrelas(update, context):
@@ -691,8 +716,8 @@ def estrelas(update, context):
             msg = 'Erro ao atualizar a base!\n\n{}'.format(str(e))
         db.close()
     falar(update, context, msg)
-    if "sucesso" in msg and comando == 'estrelas':
-        guerra(update, context, 1)
+    if not "sucesso" in msg and comando == 'estrelas':
+        raise DispatcherHandlerStop
 
 
 def atualizar_info(update, context):
@@ -704,10 +729,11 @@ def atualizar_info(update, context):
     if len(conteudo) == 0 and comando != 'delobs' and comando != 'delinicio':
         msg = "Você precisa informar observações válidas."
         falar(update, context, msg)
+        raise DispatcherHandlerStop
         return False
 
-    db = shelve.open("guerra", writeback=True)
     try:
+        db = shelve.open("guerra", writeback=True)
         if comando == 'delobs':
             comando = 'obs'
             conteudo = ''
@@ -715,12 +741,15 @@ def atualizar_info(update, context):
             comando = 'inicio'
             conteudo = ''
         db[comando] = conteudo
+        db.close()
         msg = 'Informações atualizadas com sucesso!'
+        if comando == 'fim':
+            guerra(update, context, 1)
     except Exception:
         msg = 'Erro ao atualizar as observações!'
-    db.close()
     falar(update, context, msg)
-    return True
+    if not "sucesso" in msg:
+        raise DispatcherHandlerStop
 
 
 def gerenciaradmin(update, context):
@@ -758,6 +787,41 @@ def gerenciaradmin(update, context):
         falar(update, context, 'Erro ao atualizar lista de admins!')
 
 
+def guerranocanal(update, context):
+    """
+    Atualiza a lista no canal de guerra
+    """
+    try:
+        chat = canais['guerra']
+
+        db = shelve.open('guerra', writeback=True)
+        message_id = db['message_id']
+
+        # apagar mensagem anterior
+        if message_id:
+            context.bot.delete_message(
+                chat_id=chat,
+                message_id=message_id
+            )
+
+        # enviar mensagem
+        saida = guerra(update, context, 1)
+        #  falar(update, context, 'ok estou aqui:\n\n{}'.format(saida))
+        res = context.bot.send_message(
+            chat_id=chat,
+            parse_mode='HTML',
+            text=saida
+        )
+
+        # atualizar message_id
+        message_id = res.message_id
+        db['message_id'] = message_id
+        db.close()
+
+
+    except Exception as e:
+        falar(update, context, 'deu erro:\n\n{}'.format(str(e)))
+
 def teste(update, context):
     falar(update, context, 'ola mundo')
 
@@ -766,6 +830,9 @@ def teste(update, context):
 # command handlers
 start_handler = CommandHandler('start', start)
 dispatcher.add_handler(start_handler, 0)
+
+verificar_usuario_handler = MessageHandler(Filters.all, verificar_usuario)
+dispatcher.add_handler(verificar_usuario_handler, 0)
 
 teste_handler = CommandHandler(['teste', 'start'], teste)
 dispatcher.add_handler(teste_handler, 1)
@@ -833,8 +900,11 @@ dispatcher.add_handler(atualizar_info_handler, 2)
 gerenciaradmin_handler = CommandHandler(['adicionaradmin', 'removeradmin'], gerenciaradmin)
 dispatcher.add_handler(gerenciaradmin_handler, 2)
 
-echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
-dispatcher.add_handler(echo_handler)
+conversacao_handler = MessageHandler(Filters.text & (~Filters.command), conversacao)
+dispatcher.add_handler(conversacao_handler, 2)
+
+guerranocanal_handler = CommandHandler(['reservar', 'cancelar', 'eliminar', 'atualizar', 'obs', 'up', 'down', 'inimigo', 'inicio', 'fim', 'delinicio', 'estrelas', 'defesas'], guerranocanal)
+dispatcher.add_handler(guerranocanal_handler, 3)
 
 # iniciar looping do bot
 try:
