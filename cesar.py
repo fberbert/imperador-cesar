@@ -241,7 +241,7 @@ def nick(update, context):
         db.close()
         falar(update, context, "Olá <b>{}</b>, pronto para lutar ao lado do imperador César no campo de batalha?".format(nick))
     except Exception:
-        falar(update, context, "Você ainda não configurou seu nick. Digite:\n\n/setnick")
+        falar(update, context, "Você ainda não configurou seu nick. Digite:\n\n/setnick [seu nick]")
 
 
 def users(update, context):
@@ -375,7 +375,6 @@ def novaguerra(update, context):
 
         falar(update, context, "Guerra registrada com sucesso! Para maiores informações, digite:\n\n/guerra")
         db.close()
-        guerra(update, context, 1)
     except Exception:
         falar(update, context, "Modelo de guerra inválido. Digite:\n\n/modelo\n\ne tente novamente.")
     return True
@@ -589,7 +588,7 @@ def reservar(update, context):
         msg = "Você precisa informar uma base válida."
 
     falar(update, context, msg)
-    if not "sucesso" in msg:
+    if "sucesso" not in msg:
         raise DispatcherHandlerStop
 
 
@@ -623,7 +622,7 @@ def cancelar(update, context):
         msg = "Você precisa informar bases válidas."
 
     falar(update, context, msg)
-    if not "sucesso" in msg:
+    if "sucesso" not in msg:
         raise DispatcherHandlerStop
 
 
@@ -650,7 +649,7 @@ def eliminar(update, context):
             msg = 'Erro ao eliminar a base. Informe uma base válida!'
         db.close()
     falar(update, context, msg)
-    if not "sucesso" in msg:
+    if "sucesso" not in msg:
         raise DispatcherHandlerStop
 
 
@@ -677,7 +676,7 @@ def atualizar(update, context):
             msg = 'Erro ao atualizar a base!'
         db.close()
     falar(update, context, msg)
-    if not "sucesso" in msg:
+    if "sucesso" not in msg:
         raise DispatcherHandlerStop
 
 
@@ -716,7 +715,7 @@ def estrelas(update, context):
             msg = 'Erro ao atualizar a base!\n\n{}'.format(str(e))
         db.close()
     falar(update, context, msg)
-    if not "sucesso" in msg and comando == 'estrelas':
+    if "sucesso" not in msg and comando == 'estrelas':
         raise DispatcherHandlerStop
 
 
@@ -748,7 +747,7 @@ def atualizar_info(update, context):
     except Exception:
         msg = 'Erro ao atualizar as observações!'
     falar(update, context, msg)
-    if not "sucesso" in msg:
+    if "sucesso" not in msg:
         raise DispatcherHandlerStop
 
 
@@ -795,7 +794,10 @@ def guerranocanal(update, context):
         chat = canais['guerra']
 
         db = shelve.open('guerra', writeback=True)
-        message_id = db['message_id']
+        try:
+            message_id = db['message_id']
+        except Exception:
+            message_id = ''
 
         # apagar mensagem anterior
         if message_id:
@@ -903,7 +905,7 @@ dispatcher.add_handler(gerenciaradmin_handler, 2)
 conversacao_handler = MessageHandler(Filters.text & (~Filters.command), conversacao)
 dispatcher.add_handler(conversacao_handler, 2)
 
-guerranocanal_handler = CommandHandler(['reservar', 'cancelar', 'eliminar', 'atualizar', 'obs', 'up', 'down', 'inimigo', 'inicio', 'fim', 'delinicio', 'estrelas', 'defesas'], guerranocanal)
+guerranocanal_handler = CommandHandler(['novaguerra', 'reservar', 'cancelar', 'eliminar', 'atualizar', 'obs', 'up', 'down', 'inimigo', 'inicio', 'fim', 'delinicio', 'estrelas', 'defesas'], guerranocanal)
 dispatcher.add_handler(guerranocanal_handler, 3)
 
 # iniciar looping do bot
