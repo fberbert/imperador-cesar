@@ -23,6 +23,7 @@ import random
 import string
 import shelve
 import glob
+import datetime
 
 # módulo do telegram bot
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, DispatcherHandlerStop
@@ -858,6 +859,36 @@ def guerranocanal(update, context):
     except Exception as e:
         falar(update, context, 'deu erro:\n\n{}'.format(str(e)))
 
+
+def horario(update, context):
+    """
+    Gera o horário de inicio e fim da guerra
+    """
+    try:
+        _, inicio = decommand(update.message.text)
+        h_war,m_war,s_war = list(map(int,'{}:00'.format(inicio).split(':')))
+        war_time = datetime.timedelta(hours=h_war, minutes=m_war, seconds=s_war)
+
+        war_begin = datetime.datetime.now() + war_time
+        war_ends  = war_begin + datetime.timedelta(days=1)
+
+        str_inicio = war_begin.strftime('Início: %d/%m às %H:%M')
+        str_fim = war_ends.strftime('Fim: %d/%m às %H:%M')
+
+        db = shelve.open('guerra', writeback=True)
+        db['inicio'] = str_inicio
+        db['fim'] = str_fim
+        db.close()
+        msg = 'Informações gravadas com sucesso!\n\n{}\n{}'.format(str_inicio, str_fim)
+    except Exception as e:
+        msg = 'Erro ao gravar início de guerra. Use:\n\n/horario HH:MM\n\nExemplo:\n\n/horario 14:16\n\n{}'.format(str(e))
+
+    falar(update, context, msg)
+    if "sucesso" not in msg:
+        raise DispatcherHandlerStop
+
+
+
 def teste(update, context):
     falar(update, context, 'ola mundo')
 
@@ -873,7 +904,7 @@ dispatcher.add_handler(verificar_usuario_handler, 0)
 teste_handler = CommandHandler(['teste', 'start'], teste)
 dispatcher.add_handler(teste_handler, 1)
 
-admin_only_handler = CommandHandler(['mensagem', 'users', 'repeat', 'novaguerra', 'apagarguerra', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio', 'listaradmin', 'adicionaradmin', 'removeradmin'], admin_only)
+admin_only_handler = CommandHandler(['mensagem', 'users', 'repeat', 'novaguerra', 'apagarguerra', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio', 'listaradmin', 'adicionaradmin', 'removeradmin', 'horario'], admin_only)
 dispatcher.add_handler(admin_only_handler, 0)
 
 tem_guerra_handler = CommandHandler(['reservar', 'cancelar', 'eliminar', 'atualizar', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio', 'cp', 'bazuca', 'tempo', 'heliporto'], tem_guerra)
@@ -939,11 +970,13 @@ dispatcher.add_handler(gerenciaradmin_handler, 2)
 construcao_handler = CommandHandler(['cp', 'bazuca', 'tempo', 'heliporto'], construcao)
 dispatcher.add_handler(construcao_handler, 2)
 
+horario_handler = CommandHandler('horario', horario)
+dispatcher.add_handler(horario_handler, 2)
 
 conversacao_handler = MessageHandler(Filters.text & (~Filters.command), conversacao)
 dispatcher.add_handler(conversacao_handler, 2)
 
-guerranocanal_handler = CommandHandler(['novaguerra', 'reservar', 'cancelar', 'eliminar', 'atualizar', 'obs', 'up', 'down', 'inimigo', 'inicio', 'fim', 'delinicio', 'estrelas', 'defesas', 'cp', 'bazuca', 'tempo', 'heliporto'], guerranocanal)
+guerranocanal_handler = CommandHandler(['novaguerra', 'reservar', 'cancelar', 'eliminar', 'atualizar', 'obs', 'up', 'down', 'inimigo', 'inicio', 'fim', 'delinicio', 'estrelas', 'defesas', 'cp', 'bazuca', 'tempo', 'heliporto', 'horario'], guerranocanal)
 dispatcher.add_handler(guerranocanal_handler, 3)
 
 # iniciar looping do bot

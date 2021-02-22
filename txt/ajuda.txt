@@ -44,6 +44,7 @@ Para obter ajuda:
 /up - atualiza qto de glórias a vencer
 /down - atualiza qto de glórias a perder
 /inimigo - atualiza o nome do adversário de guerra
+/horario - determina automaticamente horários de início e fim da guerra
 /inicio - determina o horário de início da guerra
 /delinicio - apaga o horário de início da guerra
 /fim - determina o horário de fim da guerra
