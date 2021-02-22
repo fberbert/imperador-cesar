@@ -680,6 +680,40 @@ def atualizar(update, context):
         raise DispatcherHandlerStop
 
 
+def construcao(update, context):
+    """
+    Atualiza informações sobre determinada base,
+    adicionando construções
+    """
+    comando, base = decommand(update.message.text)
+    try:
+        db = shelve.open("guerra", writeback=True)
+        base = '{:02d}'.format(int(base))
+        res = re.search(r'^([0-9]*)([^\s]*)(.*)$', db[base])
+        base_num = res.group(1)
+        base_desc = res.group(2)
+        base_comp = ''
+        if res.group(3):
+            base_comp = res.group(3)
+        build_dict = {
+            'cp': '⛩',
+            'bazuca': '😈',
+            'tempo': '🕐',
+            'heliporto': '🚁'
+        }
+        base_desc = base_desc + build_dict[comando]
+        db[base] = base_num + base_desc + base_comp
+        db.close()
+        msg = 'Construção adicionada com sucesso!'
+
+    except Exception:
+        msg = 'Erro ao adicionar construção!'
+
+    falar(update, context, msg)
+    if "sucesso" not in msg:
+        raise DispatcherHandlerStop
+
+
 def estrelas(update, context):
     """
     Atualiza estrelas sobre determinada base
@@ -839,10 +873,10 @@ dispatcher.add_handler(verificar_usuario_handler, 0)
 teste_handler = CommandHandler(['teste', 'start'], teste)
 dispatcher.add_handler(teste_handler, 1)
 
-admin_only_handler = CommandHandler(['mensagem', 'users', 'repeat', 'novaguerra', 'apagarguerra', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio', 'listaradmin', 'adicionaradmin', 'removeradmin', 'defesas'], admin_only)
+admin_only_handler = CommandHandler(['mensagem', 'users', 'repeat', 'novaguerra', 'apagarguerra', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio', 'listaradmin', 'adicionaradmin', 'removeradmin'], admin_only)
 dispatcher.add_handler(admin_only_handler, 0)
 
-tem_guerra_handler = CommandHandler(['reservar', 'cancelar', 'eliminar', 'atualizar', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio'], tem_guerra)
+tem_guerra_handler = CommandHandler(['reservar', 'cancelar', 'eliminar', 'atualizar', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio', 'cp', 'bazuca', 'tempo', 'heliporto'], tem_guerra)
 dispatcher.add_handler(tem_guerra_handler, 1)
 
 find_handler = CommandHandler('find', find)
@@ -902,10 +936,14 @@ dispatcher.add_handler(atualizar_info_handler, 2)
 gerenciaradmin_handler = CommandHandler(['adicionaradmin', 'removeradmin'], gerenciaradmin)
 dispatcher.add_handler(gerenciaradmin_handler, 2)
 
+construcao_handler = CommandHandler(['cp', 'bazuca', 'tempo', 'heliporto'], construcao)
+dispatcher.add_handler(construcao_handler, 2)
+
+
 conversacao_handler = MessageHandler(Filters.text & (~Filters.command), conversacao)
 dispatcher.add_handler(conversacao_handler, 2)
 
-guerranocanal_handler = CommandHandler(['novaguerra', 'reservar', 'cancelar', 'eliminar', 'atualizar', 'obs', 'up', 'down', 'inimigo', 'inicio', 'fim', 'delinicio', 'estrelas', 'defesas'], guerranocanal)
+guerranocanal_handler = CommandHandler(['novaguerra', 'reservar', 'cancelar', 'eliminar', 'atualizar', 'obs', 'up', 'down', 'inimigo', 'inicio', 'fim', 'delinicio', 'estrelas', 'defesas', 'cp', 'bazuca', 'tempo', 'heliporto'], guerranocanal)
 dispatcher.add_handler(guerranocanal_handler, 3)
 
 # iniciar looping do bot

@@ -1,22 +1,36 @@
 Digite:
 
 /ajuda - para obter ajuda
+/regras - para acessar a lista de regras da aliança
 
 <strong>LISTA DE COMANDOS DO BOT</strong>
 
 /nick - exibe seu nome de jogador no Dominations
 /setnick - configura seu nome de jogador no Dominations
 /guerra - exibe informações da guerra atual
+
+Para usar durante a guerra:
+
 /reservar - reserva uma base para atacar
 /cancelar - cancela a reserva de uma base
 /eliminar - elimina uma base da lista de guerra
-/atualizar - atualiza informações sobre determinada base
 /estrelas - adiciona estrelas a uma base da lista de guerra
+
+Para alterar informações sobre determinada base:
+
+/atualizar - atualiza informações sobre determinada base
+/defesas - atualiza quantidade de defesas de uma base
+/cp - adiciona o ícone de cidade proibida à base
+/heliporto - adiciona o ícone de heliporto à base
+/bazuca - adiciona o ícone de bazuca à base
+/tempo - adiciona o ícone de melhorar tempo à base
+
+Para obter ajuda:
+
 /legendas - exibe as legendas da lista de guerra
 /abrirbase - dica de como abrir uma base em guerra
 /dica1 - exibe dicas básicas de como lançar seus ataques na lista de guerra
 /find &lt;jogador&gt; - para encontrar o contato de um jogador
-/regras - para acessar a lista de regras da aliança
 
 
 <strong>LISTA DE COMANDOS DE OFICIAIS</strong>
@@ -33,7 +47,6 @@ Digite:
 /inicio - determina o horário de início da guerra
 /delinicio - apaga o horário de início da guerra
 /fim - determina o horário de fim da guerra
-/defesas - atualiza quantidade de defesas de uma base
 /mensagem - cria uma mensagem programada no chat da CWB-LIS
 /listaradmin - lista os administradores do BOT
 /adicionaradmin - adicionar administrador do BOT
