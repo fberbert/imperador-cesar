@@ -879,9 +879,9 @@ def horario(update, context):
         db['inicio'] = str_inicio
         db['fim'] = str_fim
         db.close()
-        msg = 'Informações gravadas com sucesso!\n\n{}\n{}'.format(str_inicio, str_fim)
+        msg = 'Informações gravadas com sucesso!'
     except Exception as e:
-        msg = 'Erro ao gravar início de guerra. Use:\n\n/horario HH:MM\n\nExemplo:\n\n/horario 14:16\n\n{}'.format(str(e))
+        msg = 'Erro ao gravar início de guerra. Use:\n\n/horario HH:MM\n\nExemplo:\n\n/horario 14:16'
 
     falar(update, context, msg)
     if "sucesso" not in msg:
