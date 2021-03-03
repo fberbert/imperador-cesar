@@ -835,7 +835,7 @@ def guerranocanal(update, context):
             message_id = ''
 
         # apagar mensagem anterior
-        if message_id:
+        if message_id != '':
             context.bot.delete_message(
                 chat_id=chat,
                 message_id=message_id
