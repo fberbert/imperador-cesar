@@ -976,7 +976,7 @@ dispatcher.add_handler(horario_handler, 2)
 conversacao_handler = MessageHandler(Filters.text & (~Filters.command), conversacao)
 dispatcher.add_handler(conversacao_handler, 2)
 
-guerranocanal_handler = CommandHandler(['novaguerra', 'reservar', 'cancelar', 'eliminar', 'atualizar', 'obs', 'up', 'down', 'inimigo', 'inicio', 'fim', 'delinicio', 'estrelas', 'defesas', 'cp', 'bazuca', 'tempo', 'heliporto', 'horario'], guerranocanal)
+guerranocanal_handler = CommandHandler(['novaguerra', 'reservar', 'cancelar', 'eliminar', 'atualizar', 'obs', 'delobs', 'up', 'down', 'inimigo', 'inicio', 'fim', 'delinicio', 'estrelas', 'defesas', 'cp', 'bazuca', 'tempo', 'heliporto', 'horario'], guerranocanal)
 dispatcher.add_handler(guerranocanal_handler, 3)
 
 # iniciar looping do bot
