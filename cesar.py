@@ -562,7 +562,7 @@ def reservar(update, context):
     nickname = pegar_nickname(update.message.from_user.username)
 
     if len(nickname) == 0:
-        msg = "Você precisa registrar seu nickname no jogo. Digite:\n\n/nickname"
+        msg = "Você precisa registrar seu nickname no jogo. Digite:\n\n/setnick"
         falar(update, context, msg)
         raise DispatcherHandlerStop
         return False
