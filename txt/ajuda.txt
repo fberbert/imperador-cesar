@@ -52,6 +52,8 @@ Para obter ajuda:
 /listaradmin - lista os administradores do BOT
 /adicionaradmin - adicionar administrador do BOT
 /removeradmin - remove administrador do BOT
+/txtchat [mensagem] - o bot envia a [mensagem] para o canal de chat
+/txtguerra [mensagem] - o bot envia a [mensagem] para o canal de guerra
 
 --
 

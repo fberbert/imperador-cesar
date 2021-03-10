@@ -320,9 +320,14 @@ def repeat(update, context):
     Repetir o que você escreveu
     """
     global canais
-    _, output = decommand(update.message.text)
+    c, output = decommand(update.message.text)
+
+    canal = canais['guerra']
+    if c == 'txtchat':
+        canal = canais['chat']
+
     context.bot.send_message(
-        chat_id=canais['chat'],
+        chat_id=canal,
         parse_mode='HTML',
         text=output
     )
@@ -904,7 +909,7 @@ dispatcher.add_handler(verificar_usuario_handler, 0)
 teste_handler = CommandHandler(['teste', 'start'], teste)
 dispatcher.add_handler(teste_handler, 1)
 
-admin_only_handler = CommandHandler(['mensagem', 'users', 'repeat', 'novaguerra', 'apagarguerra', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio', 'listaradmin', 'adicionaradmin', 'removeradmin', 'horario'], admin_only)
+admin_only_handler = CommandHandler(['mensagem', 'users', 'txtchat', 'txtguerra', 'novaguerra', 'apagarguerra', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio', 'listaradmin', 'adicionaradmin', 'removeradmin', 'horario'], admin_only)
 dispatcher.add_handler(admin_only_handler, 0)
 
 tem_guerra_handler = CommandHandler(['reservar', 'cancelar', 'eliminar', 'atualizar', 'obs', 'delobs', 'inimigo', 'jogadores', 'up', 'down', 'inicio', 'fim', 'delinicio', 'cp', 'bazuca', 'tempo', 'heliporto'], tem_guerra)
@@ -925,7 +930,7 @@ ler_arquivo_handler = CommandHandler(
 )
 dispatcher.add_handler(ler_arquivo_handler, 2)
 
-repeat_handler = CommandHandler('repeat', repeat)
+repeat_handler = CommandHandler(['txtchat', 'txtguerra'], repeat)
 dispatcher.add_handler(repeat_handler, 2)
 
 novaguerra_handler = CommandHandler('novaguerra', novaguerra)
