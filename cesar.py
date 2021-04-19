@@ -158,9 +158,9 @@ def conversacao(update, context):
             re.compile("HAHAHA"),
             re.compile("HUAHUA")
         ]
-        if any(regex.search(msg) for regex in regjoy):
-            out = emojize(":joy::joy::joy:", use_aliases=True)
-            falar(update, context, out)
+        #  if any(regex.search(msg) for regex in regjoy):
+            #  out = emojize(":joy::joy::joy:", use_aliases=True)
+            #  falar(update, context, out)
 
         # responde o usuário com um emoji de raiva
         regrage = [
