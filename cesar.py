@@ -692,25 +692,30 @@ def construcao(update, context):
     adicionando construções
     """
     comando, base = decommand(update.message.text)
+    base_arr = base.split()
+
     try:
         db = shelve.open("guerra", writeback=True)
-        base = '{:02d}'.format(int(base))
-        res = re.search(r'^([0-9]*)([^\s]*)(.*)$', db[base])
-        base_num = res.group(1)
-        base_desc = res.group(2)
-        base_comp = ''
-        if res.group(3):
-            base_comp = res.group(3)
-        build_dict = {
-            'cp': '⛩',
-            'bazuca': '😈',
-            'tempo': '🕐',
-            'heliporto': '🚁'
-        }
-        base_desc = base_desc + build_dict[comando]
-        db[base] = base_num + base_desc + base_comp
-        db.close()
-        msg = 'Construção adicionada com sucesso!'
+
+        msg = ''
+        for base in base_arr:
+            base = '{:02d}'.format(int(base))
+            res = re.search(r'^([0-9]*)([^\s]*)(.*)$', db[base])
+            base_num = res.group(1)
+            base_desc = res.group(2)
+            base_comp = ''
+            if res.group(3):
+                base_comp = res.group(3)
+            build_dict = {
+                'cp': '⛩',
+                'bazuca': '😈',
+                'tempo': '🕐',
+                'heliporto': '🚁'
+            }
+            base_desc = base_desc + build_dict[comando]
+            db[base] = base_num + base_desc + base_comp
+            db.close()
+            msg += 'Base {}, construção adicionada com sucesso!'.format(base)
 
     except Exception:
         msg = 'Erro ao adicionar construção!'
