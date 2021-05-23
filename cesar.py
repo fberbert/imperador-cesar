@@ -714,11 +714,11 @@ def construcao(update, context):
             }
             base_desc = base_desc + build_dict[comando]
             db[base] = base_num + base_desc + base_comp
-            db.close()
-            msg += 'Base {}, construção adicionada com sucesso!'.format(base)
+            msg += 'Base {}, construção adicionada com sucesso!\n'.format(base)
+        db.close()
 
-    except Exception:
-        msg = 'Erro ao adicionar construção!'
+    except Exception as e:
+        msg = 'Erro ao adicionar construção! {}'.format(str(e))
 
     falar(update, context, msg)
     if "sucesso" not in msg:
