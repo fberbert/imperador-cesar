@@ -425,7 +425,7 @@ def guerra(update, context, avisar = 0):
     #  horario += "Fim: {}\n<i>* horário de Brasília</i>".format(fim)
     horario += "{}\n".format(fim)
 
-    saida = "CWB-LIS 🆚 {}\n🔼 {} 🔽 {}\n{}\n\n{}\n\n<pre>{}</pre>".format(inimigo, up, down, obs, bases_string, horario)
+    saida = "Legio Fulminata 🆚 {}\n🔼 {} 🔽 {}\n{}\n\n{}\n\n<pre>{}</pre>".format(inimigo, up, down, obs, bases_string, horario)
     if avisar == 1:
         return saida
     falar(update, context, saida)
